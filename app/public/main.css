@@ -1,0 +1,61 @@
+
+
+#app {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #2c3e50;
+}
+
+#nav {
+    padding: 30px;
+}
+
+#nav a {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+#nav a.router-link-exact-active {
+    color: #42b983;
+}
+
+body {
+    background-color: #E9ECEF !important;
+}
+
+.container {
+    background-color: white;
+}
+
+.btn,
+.btn:active,
+.btn:focus,
+.btn.active {
+    background-color: #501b1d;
+    border: #501b1d;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn:hover {
+    background-color: #361314;
+    border: #361314;
+}
+
+.btn-light,
+.btn-light:active,
+.btn-light:focus,
+.btn-light.active {
+    background-color: #ffffff;
+    border: #2c2c2c;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn-light:hover {
+    background-color: #dedede;
+    border: #484848;
+}
+
+::-webkit-details-marker {   display:none; }
