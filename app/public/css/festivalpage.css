@@ -1,0 +1,30 @@
+.card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover a {
+  border-radius: 10px;
+}
+
+.card:hover h5 {
+  opacity: 70%;
+}
+
+.card a {
+  text-decoration: none;
+  color: inherit;
+  transition: border-radius 0.3s;
+}
+
+.card a:hover {
+  text-decoration: none;
+  color: inherit;
+}
