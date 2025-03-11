@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/../services/eventservice.php';
-require __DIR__ . '/../models/music_event.php';
+require_once __DIR__ . '/../models/music_event.php';
 require __DIR__ . '/../services/artistservice.php';
 require __DIR__ . '/../services/venueservice.php';
 require __DIR__ . '/../services/ticketpassservice.php';
