@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../services/eventservice.php';
-require __DIR__ . '/../models/music_event.php';
+/*require __DIR__ . '/../models/music_event.php';*/
+require_once __DIR__ . '/../models/music_event.php';
 require __DIR__ . '/../services/artistservice.php';
 require __DIR__ . '/../services/venueservice.php';
 require __DIR__ . '/../services/ticketpassservice.php';
@@ -78,13 +79,13 @@ class EventController
         $this->addToCart();
 
         if (isset($_POST["wednesday"])) {
-            $model = $this->eventService->getJazzEventsByDate('%2023-07-26%');
+            $model = $this->eventService->getJazzEventsByDate('%2025-07-26%');
         } else if (isset($_POST["thursday"])) {
-            $model = $this->eventService->getJazzEventsByDate('%2023-07-27%');
+            $model = $this->eventService->getJazzEventsByDate('%2025-07-27%');
         } else if (isset($_POST["friday"])) {
-            $model = $this->eventService->getJazzEventsByDate('%2023-07-28%');
+            $model = $this->eventService->getJazzEventsByDate('%2025-07-28%');
         } else if (isset($_POST["saturday"])) {
-            $model = $this->eventService->getJazzEventsByDate('%2023-07-29%');
+            $model = $this->eventService->getJazzEventsByDate('%2025-07-29%');
         } else {
             $model = $this->eventService->getAllJazzEvents();
         }
