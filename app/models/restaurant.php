@@ -128,8 +128,9 @@ class Restaurant
 		return $this->seats;
 	}
 
-	public function setSeats(string $value)
+	public function setSeats(int $value): void
 	{
 		$this->seats = $value;
 	}
+	
 }
