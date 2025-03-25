@@ -2,14 +2,14 @@
 U	php:S1131C"@Remove the useless trailing whitespaces at the end of this line.(Èê¾Â
 [php:S112¥"FDefine and throw a dedicated exception instead of using a generic one.(êÊ³¯
 n	php:S3776d"TRefactor this function to reduce its Cognitive Complexity from 43 to the 15 allowed.(¿‚ïÂøÿÿÿÿ
-F	php:S1481Q"1Remove this unused "$restaurants" local variable.(ùÑšÔ
-E	php:S1481X"0Remove this unused "$restaurant" local variable.(±ÛŸ
-H	php:S1481"".Remove this unused "$sessions" local variable.(Ô´Š¡ùÿÿÿÿ
 H	php:S1481*".Remove this unused "$sessions" local variable.(ê—ÕÓûÿÿÿÿ
-F	php:S14816"1Remove this unused "$restaurants" local variable.(ùÑšÔ
 B	php:S14811"-Remove this unused "$session" local variable.(´·˜‡
-F	php:S1481"1Remove this unused "$restaurants" local variable.(ùÑšÔ
 M	php:S1481‘"2Remove this unused "$reservations" local variable.(Ëø»¨ûÿÿÿÿ
+E	php:S1481X"0Remove this unused "$restaurant" local variable.(±ÛŸ
+F	php:S14816"1Remove this unused "$restaurants" local variable.(ùÑšÔ
+F	php:S1481"1Remove this unused "$restaurants" local variable.(ùÑšÔ
+H	php:S1481"".Remove this unused "$sessions" local variable.(Ô´Š¡ùÿÿÿÿ
+F	php:S1481Q"1Remove this unused "$restaurants" local variable.(ùÑšÔ
 ;	php:S2003"&Replace "require" with "require_once".(­ÀÙ
 @	php:S2003"&Replace "require" with "require_once".(úÉİúÿÿÿÿ
 ;	php:S2003"&Replace "require" with "require_once".(…¨úí
