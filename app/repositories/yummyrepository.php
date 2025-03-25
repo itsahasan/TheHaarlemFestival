@@ -56,7 +56,7 @@ class YummyRepository extends Repository
     function getRestaurantById($id)
     {
         try {
-            //images.image is joined multiple times under different aliases to select the multiple images needed for each restaurant
+
             $stmt = $this->connection->prepare("SELECT restaurant.id, restaurant.name, restaurant.location, restaurant.description, 
             restaurant.cuisine, restaurant.seats, restaurant.stars, restaurant.email, restaurant.phonenumber, img1.image AS image1, img2.image 
             AS image2, img3.image AS image3 
