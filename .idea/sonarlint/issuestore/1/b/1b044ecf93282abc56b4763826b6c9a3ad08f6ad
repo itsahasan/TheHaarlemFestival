@@ -1,0 +1,11 @@
+
+JWeb:PageWithoutTitleCheck"Add a <title> tag to this page.(Õ¶¯M8ıïêæÜ2
+jWeb:DoctypePresenceCheck	":Insert a <!DOCTYPE> declaration to before this <html> tag.(œ÷Ãûÿÿÿÿ8ÿïêæÜ2
+a	Web:S5254	"@Add "lang" and/or "xml:lang" attributes to this "<html>" element(œ÷Ãûÿÿÿÿ8ÿïêæÜ2
+j	Web:S6851"IRemove redundant word "image" from the "alt" attribute of your "img" tag.(¼ ÿŒşÿÿÿÿ8ÿïêæÜ2
+j	Web:S6851"IRemove redundant word "image" from the "alt" attribute of your "img" tag.(¢×‹ğÿÿÿÿÿ8ÿïêæÜ2
+j	Web:S6851,"IRemove redundant word "image" from the "alt" attribute of your "img" tag.(“ÔŠ¹ûÿÿÿÿ8€ğêæÜ2
+A	php:S2003"&Replace "require" with "require_once".(–û{8 ğêæÜ2
+A	php:S2003n"&Replace "require" with "require_once".(„Í¯V8 ğêæÜ2
+g	php:S4833"LReplace "require" with namespace import mechanism through the "use" keyword.(–û{8 ğêæÜ2
+g	php:S4833n"LReplace "require" with namespace import mechanism through the "use" keyword.(„Í¯V8 ğêæÜ2
