@@ -28,6 +28,7 @@ class EventController extends BaseController
 
     public function danceevents()
     {
+        var_dump($_POST);
         $this->handleAddToCart($this->cartService);
         $model = $this->filterEventsByDate('dance');
         $passes = $this->ticketpassService->getDancePasses();
@@ -43,24 +44,24 @@ class EventController extends BaseController
     }
 
     private function filterEventsByDate($type)
-    {
-        $dates = [
-            'wednesday' => '2025-07-26',
-            'thursday'  => '2025-07-27',
-            'friday'    => '2025-07-28',
-            'saturday'  => '2025-07-29',
-        ];
+{
+    $dates = [
+        'wednesday' => '2025-07-26',
+        'thursday'  => '2025-07-27',
+        'friday'    => '2025-07-28',
+        'saturday'  => '2025-07-29',
+    ];
 
-        foreach ($dates as $key => $date) {
-            if (isset($_POST[$key])) {
-                $method = "get" . ucfirst($type) . "EventsByDate";
-                return $this->eventService->$method("%$date%");
-            }
+    foreach ($dates as $key => $date) {
+        if (isset($_POST[$key])) {
+            $method = "get" . ucfirst($type) . "EventsByExactDate";
+            return $this->eventService->$method($date); 
         }
-
-        $method = "getAll" . ucfirst($type) . "Events";
-        return $this->eventService->$method();
     }
+
+    $method = "getAll" . ucfirst($type) . "Events";
+    return $this->eventService->$method();
+}
 
     public function eventcms()
     {
