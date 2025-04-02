@@ -97,7 +97,7 @@ class ArtistController extends BaseController
         $artist = $this->buildArtistFromPost($_POST);
         $existing = $this->artistService->getAnArtist($id);
         $this->handleArtistImages($artist, $existing);
-        $success = $this->artistService->updateArtist($artist, $id);
+        $success = $this->artistService->updateArtist($artist, $id) ? true : false;
         $this->showAlert($success, 'Artist updated successfully.', 'Failed to update artist.');
     }
 
