@@ -1,5 +1,11 @@
 <?php
 include __DIR__ . '/../header.php';
+
+function getButtonClass($key) {
+    if (isset($_POST[$key])) return 'btn-success';
+    if (!isset($_POST['thursday']) && !isset($_POST['friday']) && !isset($_POST['saturday']) && $key === 'events') return 'btn-success';
+    return 'btn-primary';
+}
 ?>
 
 <head>
@@ -22,19 +28,13 @@ include __DIR__ . '/../header.php';
             Back2Backsessions(multipleacts,largerstage,longer sessions) as well as in
             smaller experimental (club) sessions.</p>
 
-            <?php
-function getButtonClass($key) {
-    if (isset($_POST[$key])) return 'btn-success';
-    if (!isset($_POST['thursday']) && !isset($_POST['friday']) && !isset($_POST['saturday']) && $key === 'events') return 'btn-success';
-    return 'btn-primary';
-}
-?>
-<form method="POST" class="d-flex justify-content-center flex-wrap gap-2 my-3">
-    <button type="submit" name="events" class="btn <?= getButtonClass('events') ?>">All Events</button>
-    <button type="submit" name="thursday" class="btn <?= getButtonClass('thursday') ?>">Thursday 27</button>
-    <button type="submit" name="friday" class="btn <?= getButtonClass('friday') ?>">Friday 28</button>
-    <button type="submit" name="saturday" class="btn <?= getButtonClass('saturday') ?>">Saturday 29</button>
-</form>
+           
+    <form method="POST" class="d-flex justify-content-center flex-wrap gap-2 my-3">
+        <button type="submit" name="events" class="btn <?= getButtonClass('events') ?>">All Events</button>
+        <button type="submit" name="thursday" class="btn <?= getButtonClass('thursday') ?>">Thursday 27</button>
+        <button type="submit" name="friday" class="btn <?= getButtonClass('friday') ?>">Friday 28</button>
+        <button type="submit" name="saturday" class="btn <?= getButtonClass('saturday') ?>">Saturday 29</button>
+    </form>
 
         <div class="row my-3">
             <?php
