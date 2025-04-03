@@ -1,3 +1,4 @@
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
 <?php
 include __DIR__ . '/../../header.php';
 ?>
@@ -159,3 +160,8 @@ include __DIR__ . '/../../header.php';
 <?php
 include __DIR__ . '/../../footer.php';
 ?>
+<?php else: ?>
+<div class="alert alert-danger mt-4 text-center">
+    You do not have permission to access this CMS section.
+</div>
+<?php endif; ?>

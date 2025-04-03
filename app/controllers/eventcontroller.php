@@ -65,6 +65,11 @@ class EventController extends BaseController
 
     public function eventcms()
     {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] != 1) {
+            echo "<script>alert('Access denied. Admins only.'); window.location.href = '/';</script>";
+            exit();
+        }
+
         if (isset($_POST["delete"])) {
             $this->deleteEvent();
         }
