@@ -270,46 +270,80 @@ class OrdersRepository
     }
 
     function getMyOrdersByUserId($user_id)
-    {
-        try {
-            $stmt = $this->connection->prepare("SELECT subq.event_id as id,
-                COALESCE(NULLIF(subq.event_name,''), 'History Event') AS event_name,
-                COALESCE(NULLIF(subq.event_price,''), 0) AS event_price,
-                ci.qty
-                FROM orders_item ci
-                LEFT JOIN (
-                    SELECT music_event.id as event_id, artist.name as event_name, music_event.ticket_price as event_price, music_event.datetime as event_datetime, venue.name as event_location, music_event.tickets_available as stock, music_event.type as event_type
-                    FROM music_event 
-                    LEFT JOIN venue as venue ON venue.id = music_event.venue
-                    LEFT JOIN artist as artist ON artist.id = music_event.artist
-                    UNION
-                    SELECT id as event_id, ticketpass.name as event_name, ticketpass.price as event_price, ticketpass.datetime as event_datetime, 'Haarlem' as event_location, 'no limit' as stock, ticketpass.type as event_type
-                    FROM ticketpass 
-                    UNION
-                    SELECT id as event_id, 'History Event' as event_name, history_event.price as event_price, history_event.datetime as event_datetime, history_event.location as event_location, history_event.tickets_available as stock, 'history' as event_type
-                    FROM history_event 
-                    UNION
-                    SELECT reservation.id as event_id, CONCAT('Reservation at ', restaurant.name) as event_name, reservation.price as event_price, reservation.date as event_datetime, restaurant.name as event_location, food_session.available_seats as stock, 'food' as event_type
-                    FROM reservation 
-                    LEFT JOIN restaurant as restaurant on restaurant.id = reservation.restaurantID
-                    LEFT JOIN food_session as food_session on food_session.restaurantid = restaurant.id
-                ) AS subq ON subq.event_id = ci.product_id
-                WHERE ci.user_id = :user_id");
+{
+    try {
+        $stmt = $this->connection->prepare("
+            SELECT 
+                subq.event_id AS id,
+                COALESCE(NULLIF(subq.event_name, ''), 'History Event') AS event_name,
+                COALESCE(NULLIF(subq.event_price, ''), 0) AS event_price,
+                oi.qty
+            FROM orders_item oi
+            JOIN orders o ON oi.order_id = o.id
+            LEFT JOIN (
+                SELECT 
+                    music_event.id AS event_id, 
+                    artist.name AS event_name, 
+                    music_event.ticket_price AS event_price, 
+                    music_event.datetime AS event_datetime, 
+                    venue.name AS event_location, 
+                    music_event.tickets_available AS stock, 
+                    music_event.type AS event_type
+                FROM music_event 
+                LEFT JOIN venue ON venue.id = music_event.venue
+                LEFT JOIN artist ON artist.id = music_event.artist
 
-            $user_id = htmlspecialchars(strip_tags($user_id));
+                UNION
 
-            $stmt->bindParam(":user_id", $user_id);
+                SELECT 
+                    id AS event_id, 
+                    name AS event_name, 
+                    price AS event_price, 
+                    datetime AS event_datetime, 
+                    'Haarlem' AS event_location, 
+                    'no limit' AS stock, 
+                    type AS event_type
+                FROM ticketpass
 
-            $stmt->execute();
+                UNION
 
-            $stmt->setFetchMode(PDO::FETCH_CLASS, 'OrdersItem');
-            $items = $stmt->fetchAll();
+                SELECT 
+                    id AS event_id, 
+                    'History Event' AS event_name, 
+                    price AS event_price, 
+                    datetime AS event_datetime, 
+                    location AS event_location, 
+                    tickets_available AS stock, 
+                    'history' AS event_type
+                FROM history_event
 
-            return $items;
-        } catch (PDOException $e) {
-            echo $e;
-        }
+                UNION
+
+                SELECT 
+                    reservation.id AS event_id, 
+                    CONCAT('Reservation at ', restaurant.name) AS event_name, 
+                    reservation.price AS event_price, 
+                    reservation.date AS event_datetime, 
+                    restaurant.name AS event_location, 
+                    food_session.available_seats AS stock, 
+                    'food' AS event_type
+                FROM reservation 
+                LEFT JOIN restaurant ON restaurant.id = reservation.restaurantID
+                LEFT JOIN food_session ON food_session.restaurantid = restaurant.id
+            ) AS subq ON subq.event_id = oi.product_id
+            WHERE o.user_id = :user_id
+        ");
+
+        $user_id = htmlspecialchars(strip_tags($user_id));
+        $stmt->bindParam(":user_id", $user_id);
+        $stmt->execute();
+
+        $stmt->setFetchMode(PDO::FETCH_CLASS, 'OrdersItem');
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        echo $e;
     }
+}
 
     function countMyOrders($product_id)
     {
