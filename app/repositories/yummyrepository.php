@@ -38,7 +38,7 @@ class YummyRepository extends Repository
         try {
             $stmt = $this->connection->prepare("SELECT restaurant.id, restaurant.name, restaurant.location, restaurant.description, 
             restaurant.cuisine, restaurant.seats, restaurant.stars, restaurant.email, restaurant.phonenumber, img1.image AS image1, img2.image 
-            AS image2, img3.image AS image3 
+            AS image2, img3.image AS image3, restaurant.price 
             FROM restaurant 
             JOIN images img1 ON img1.id = restaurant.image1 
             JOIN images img2 ON img2.id = restaurant.image2 
@@ -59,7 +59,7 @@ class YummyRepository extends Repository
 
             $stmt = $this->connection->prepare("SELECT restaurant.id, restaurant.name, restaurant.location, restaurant.description, 
             restaurant.cuisine, restaurant.seats, restaurant.stars, restaurant.email, restaurant.phonenumber, img1.image AS image1, img2.image 
-            AS image2, img3.image AS image3 
+            AS image2, img3.image AS image3, restaurant.price 
             FROM restaurant 
             JOIN images img1 ON img1.id = restaurant.image1 
             JOIN images img2 ON img2.id = restaurant.image2 

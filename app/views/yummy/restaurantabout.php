@@ -54,7 +54,7 @@ require __DIR__ . '/../header.php';
         </p>
     </div>
 
-    <!-- Inclusivity Info (можно убрать или заменить) -->
+    <!-- Inclusivity Info -->
     <div class="mb-5">
         <h4 class="text-center">Inclusivity</h4>
         <div class="bg-danger text-white p-3 rounded text-center" style="max-width: 900px; margin: 0 auto;">
@@ -95,13 +95,22 @@ require __DIR__ . '/../header.php';
                         </div>
                     </div>
 
+                    <?php
+                    $date1 = new DateTime('2025-07-25');
+                    $date2 = new DateTime('2025-07-26');
+                    $date3 = new DateTime('2025-07-27');
+                    $date4 = new DateTime('2025-07-28');
+                    $dates = [$date1, $date2, $date3, $date4];
+                    ?>
+
                     <div class="mb-3">
                         <label for="date"><strong>Day:</strong></label>
                         <select class="form-select" name="date" id="date">
-                            <option value="2023-06-26">Thursday July 26th</option>
-                            <option value="2023-06-27">Friday July 27th</option>
-                            <option value="2023-06-28">Saturday July 28th</option>
-                            <option value="2023-06-29">Sunday July 29th</option>
+                            <?php foreach ($dates as $date): ?>
+                                <option value="<?= $date->format('Y-m-d') ?>">
+                                    <?= $date->format('l jS \o\f F') ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
