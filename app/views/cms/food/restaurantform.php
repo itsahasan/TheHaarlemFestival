@@ -43,7 +43,7 @@
 <div class="form-group row mb-1">
     <label for="price" class="col-sm-2 col-form-label">Price:</label>
     <div class="col-sm-10">
-        <input type="number" class="form-control" id="price" name="price" value="<?= isset($restaurantToEdit) ? $restaurantToEdit->getPrice() : 0 ?>" required>
+        <input type="number" step="any" class="form-control" id="price" name="price" value="<?= isset($restaurantToEdit) ? $restaurantToEdit->getPrice() : 0 ?>" required>
     </div>
 </div>
 <div class="form-group row mb-1">
