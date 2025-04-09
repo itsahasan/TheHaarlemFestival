@@ -1,43 +1,36 @@
 <?php
 include(__DIR__ . "/../../header.php");
 
+// Access control: Only logged-in users can access this page
+session_start();
+if (!isset($_SESSION['loggedin'])) {
+    echo "<script>alert('Please log in to access your profile.'); window.location.href = '/login';</script>";
+    exit();
+}
 ?>
-<div class="card">
+
+<div class="card mt-4">
     <div class="card-header">
-        Edit User
+        <h4>Edit My Profile</h4>
     </div>
     <div class="card-body">
-        <form action="/user/update" method="post" enctype="multipart/form-data" id="edit-form">
-            <div class="mb-3">
-                <label for="id" class="form-label">Id: <?php echo $user->getId(); ?></label>
-                <input type="hidden" name="id" value="<?php echo $user->getId(); ?>">
-            </div>
+        <form action="/user/updateMyProfile" method="post" id="edit-form">
+            <input type="hidden" name="id" value="<?= $user->getId(); ?>">
+
             <div class="mb-3">
                 <label for="username" class="form-label">Username:</label>
-                <input type="text" class="form-control" name="username" id="username" placeholder="<?php echo $user->getUsername(); ?>">
+                <input type="text" class="form-control" name="username" id="username" value="<?= $user->getUsername(); ?>" required>
             </div>
+
             <div class="mb-3">
                 <label for="email" class="form-label">Email:</label>
-                <input type="email" class="form-control" name="email" id="email" placeholder="<?php echo $user->getEmail(); ?>">
+                <input type="email" class="form-control" name="email" id="email" value="<?= $user->getEmail(); ?>" required>
             </div>
-            <div class="mb-3">
-                <label for="role" class="form-label">Role:</label>
-                <select name="role" id="role" class="form-control">
-                    <?php foreach ($roles as $role) {
-                        if ($role['id'] == $user->getRole()) {
-                            echo "<option selected value='$role[id]'>$role[name]</option>";
-                        } else {
-                            echo "<option value='$role[id]'>$role[name]</option>";
-                        }
-                    }
-                    ?>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-success">Save</button>
-            <a name="" id="" class="btn btn-primary" href="/user" role="button">Cancel</a>
 
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="/user/myprofile" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
-
 </div>
+
 <?php include(__DIR__ . "/../../footer.php"); ?>

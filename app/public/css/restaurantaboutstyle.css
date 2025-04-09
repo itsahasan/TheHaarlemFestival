@@ -1,9 +1,55 @@
-.image-fluid {
-    max-width: 500px;
-    max-height: 300px;
+/* Общая обёртка */
+.container {
+    max-width: 1100px;
 }
 
-.row {
-    margin-top: 30px;
-    margin-bottom: 30px;
+/* Рамки Bootstrap */
+.border-danger {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff;
+    border-radius: 6px;
+}
+
+/* Картинки */
+.img-fluid {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-height: 100%;
+    object-fit: cover;
+}
+
+/* Текстовые блоки */
+h2, h4, h5, h6 {
+    font-weight: bold;
+}
+
+label {
+    font-weight: 500;
+}
+
+ul {
+    padding-left: 1rem;
+}
+
+/* Отступы для визуального ритма */
+.mb-3, .mb-4, .mb-5 {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Ровное отображение фото и инфоблока */
+@media (min-width: 768px) {
+    .align-items-start {
+        align-items: flex-start !important;
+    }
+
+    .row.g-3 .col-md-6 {
+        display: flex;
+        justify-content: center;
+    }
+
+    .row.g-3 .img-fluid {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+    }
 }

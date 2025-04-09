@@ -6,108 +6,135 @@ require __DIR__ . '/../header.php';
     <link rel="stylesheet" href="/css/restaurantaboutstyle.css">
 </head>
 
-<html>
-<div class="container-fluid">
-    <div class="row justify-content-around">
+<div class="container py-5" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    <!-- Название ресторана -->
+    <h2 class="text-center mb-4" style="font-weight: bold;">Restaurant <?= htmlspecialchars($restaurant->getName()) ?></h2>
 
-        <div class="col-4">
-            <h3>Description</h3>
-            <p><?= $restaurant->getDescription() ?></p>
+    <!-- Контактная информация + главное изображение -->
+    <div class="row mb-5 align-items-start">
+        <div class="col-md-4">
+            <div class="p-3 border border-danger mb-3">
+                <h5><strong>Contact information</strong></h5>
+                <p><strong>Location:</strong><br> <?= $restaurant->getLocation() ?></p>
+                <p><strong>Phone:</strong><br> <?= $restaurant->getPhonenumber() ?></p>
+                <p><strong>Email:</strong><br> <?= $restaurant->getEmail() ?></p>
+            </div>
+            <div class="p-3 border border-danger mb-3">
+                <h6>Opening Hours:</h6>
+                <ul class="mb-0" style="padding-left: 1rem;">
+                    <li>Lunch: Friday–Monday 12:00–14:00</li>
+                    <li>Dinner: Thursday–Monday 18:00–22:00</li>
+                </ul>
+            </div>
+            <div class="p-3 border border-danger">
+                <p><strong>Rating:</strong> <?= $restaurant->getStars() ?> stars</p>
+            </div>
         </div>
-        <div class="col-4">
-            <img src="data:image/jpg;charset=utf8;base64,<?php echo base64_encode($restaurant->getImage1()); ?>" class="image-fluid" alt="Loading image...">
+
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-12 text-center">
+                    <img src="data:image/jpg;charset=utf8;base64,<?= base64_encode($restaurant->getImage1()); ?>" class="img-fluid rounded shadow-sm" alt="Restaurant">
+                </div>
+                <div class="col-md-6 text-center">
+                    <img src="data:image/jpg;charset=utf8;base64,<?= base64_encode($restaurant->getImage2()); ?>" class="img-fluid rounded shadow-sm" alt="Dish 1">
+                </div>
+                <div class="col-md-6 text-center">
+                    <img src="data:image/jpg;charset=utf8;base64,<?= base64_encode($restaurant->getImage3()); ?>" class="img-fluid rounded shadow-sm" alt="Dish 2">
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row justify-content-around">
-        <div class="col-2">
-            <h3>Details</h3>
-            <p>Price: <?= $sessions[0]->getPrice() ?></p>
-            <p>Cuisine: <?= $restaurant->getCuisine() ?> </p>
-            <p>Rating: <?= $restaurant->getStars() ?> Stars</p>
-        </div>
-        <div class="col-3">
-            <image src="data:image/jpg;charset=utf8;base64,<?php echo base64_encode($restaurant->getImage2()); ?>" class="image-fluid" alt="Loading image..." />
-        </div>
-        <div class="col-3">
-            <h3><b>Contact</b></h3>
-            <p><b>Address:</b> <?= $restaurant->getLocation() ?> </p>
-            <p><b>Phone:</b> <?= $restaurant->getPhonenumber() ?> </p>
-            <p><b>Email: </b> <?= $restaurant->getEmail() ?> </p>
+
+    <!-- Description -->
+    <div class="mb-5">
+        <h4 class="text-center">Description</h4>
+        <p class="text-center mx-auto" style="max-width: 700px;">
+            <?= $restaurant->getDescription() ?>
+        </p>
+    </div>
+
+    <!-- Inclusivity Info -->
+    <div class="mb-5">
+        <h4 class="text-center">Inclusivity</h4>
+        <div class="bg-danger text-white p-3 rounded text-center" style="max-width: 900px; margin: 0 auto;">
+            Restaurant <?= htmlspecialchars($restaurant->getName()) ?> is generally accommodating to dietary needs and offers a welcoming atmosphere. If you have allergies, please contact the restaurant directly at <strong><?= $restaurant->getPhonenumber() ?></strong>.
         </div>
     </div>
-    <div class="row justify-content-around">
-        <div class="col-4">
-            <image src="data:image/jpg;charset=utf8;base64,<?php echo base64_encode($restaurant->getImage3()); ?>" class="image-fluid" alt="Loading image..." />
-        </div>
-        <div class="col-5">
-            <div class="alert alert-danger" role="alert" id="reservation-alert" style="display: none"></div>
-            <h3>Make a reservation</h3>
-            <form action="/yummy/addReservation?restaurantid=<?= $restaurant->getId() ?>" method="POST">
-                <div class="form-field">
+
+    <!-- Бронирование -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm p-4">
+                <div class="alert alert-danger" role="alert" id="reservation-alert" style="display: none"></div>
+                <h4 class="mb-3">Make a reservation</h4>
+                <form action="/yummy/addReservation?restaurantid=<?= $restaurant->getId() ?>" method="POST">
                     <div class="mb-3">
-                        <label for="name" class="form-label"><b>Name:</b></label>
+                        <label for="name" class="form-label"><strong>Name:</strong></label>
                         <input type="text" class="form-control" required name="name" id="name">
                     </div>
-                    <p><b>Guests</b></p>
-                    <div class="row" id="guests-select">
+
+                    <p class="mb-2"><strong>Guests</strong></p>
+                    <div class="row mb-3" id="guests-select">
                         <div class="col">
-                            <label><b>Adults:</b> </label>
-                            <select name="formguestsadult">
-                                <option value="1" selected="true">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
+                            <label for="formguestsadult"><strong>Adults:</strong></label>
+                            <select class="form-select" name="formguestsadult" id="formguestsadult">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <option value="<?= $i ?>" <?= $i === 1 ? 'selected' : '' ?>><?= $i ?></option>
+                                <?php endfor; ?>
                             </select>
                         </div>
                         <div class="col">
-                            <label><b>Children:</b> </label>
-                            <select name="formguestskids">
-                                <option value="0" selected="true">None</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
+                            <label for="formguestskids"><strong>Children:</strong></label>
+                            <select class="form-select" name="formguestskids" id="formguestskids">
+                                <option value="0" selected>None</option>
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <option value="<?= $i ?>"><?= $i ?></option>
+                                <?php endfor; ?>
                             </select>
                         </div>
                     </div>
-                </div>
-                <div class="form-field">
-                    <label><b>Day:</b> </label>
-                    <select name="date">
-                        <option value="2023-06-26">Thursday July 26th</option>
-                        <option value="2023-06-27">Friday July 27th</option>
-                        <option value="2023-06-28">Saturday July 28th</option>
-                        <option value="2023-06-29">Sunday July 29th</option>
-                    </select>
-                </div>
-                <div class="form-field">
-                    <label><b>Time:</b> </label>
-                    <select name="session" id="time-select">
-                        <?php
-                        $i = 1;
-                        foreach ($sessions as $session) {
-                            $date_input = strtotime($session->getStarttime());
-                            $time = date('H:i', $date_input);
-                        ?>
-                            <option value="<?= $session->getId() ?>-<?= $time?>"><?= $time ?></option>
-                        <?php
-                            $i++;
-                        } ?>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="request" class="form-label"><b>Special requests:</b></label>
-                    <input type="text" class="form-control" name="request" id="request">
-                </div>
-                <button type="submit" class="btn btn-success" name="add-to-cart">Add reservation</button>
-            </form>
+
+                    <?php
+                    $date1 = new DateTime('2025-07-25');
+                    $date2 = new DateTime('2025-07-26');
+                    $date3 = new DateTime('2025-07-27');
+                    $date4 = new DateTime('2025-07-28');
+                    $dates = [$date1, $date2, $date3, $date4];
+                    ?>
+
+                    <div class="mb-3">
+                        <label for="date"><strong>Day:</strong></label>
+                        <select class="form-select" name="date" id="date">
+                            <?php foreach ($dates as $date): ?>
+                                <option value="<?= $date->format('Y-m-d') ?>">
+                                    <?= $date->format('l jS \o\f F') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="time-select"><strong>Time:</strong></label>
+                        <select class="form-select" name="session" id="time-select">
+                            <?php foreach ($sessions as $session): ?>
+                                <?php $time = date('H:i', strtotime($session->getStarttime())); ?>
+                                <option value="<?= $session->getId() ?>-<?= $time ?>"><?= $time ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="request" class="form-label"><strong>Special requests:</strong></label>
+                        <input type="text" class="form-control" name="request" id="request">
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100">Make a reservation</button>
+                </form>
+            </div>
         </div>
     </div>
-
 </div>
-
 
 <?php
 require __DIR__ . '/../footer.php';

@@ -1,0 +1,42 @@
+
+U	php:S1131C"@Remove the useless trailing whitespaces at the end of this line.(Èê¾Â
+[php:S112¥"FDefine and throw a dedicated exception instead of using a generic one.(êÊ³¯
+n	php:S3776d"TRefactor this function to reduce its Cognitive Complexity from 43 to the 15 allowed.(¿‚ïÂøÿÿÿÿ
+H	php:S1481*".Remove this unused "$sessions" local variable.(ê—ÕÓûÿÿÿÿ
+B	php:S14811"-Remove this unused "$session" local variable.(´·˜‡
+M	php:S1481‘"2Remove this unused "$reservations" local variable.(Ëø»¨ûÿÿÿÿ
+E	php:S1481X"0Remove this unused "$restaurant" local variable.(±ÛŸ
+F	php:S14816"1Remove this unused "$restaurants" local variable.(ùÑšÔ
+F	php:S1481"1Remove this unused "$restaurants" local variable.(ùÑšÔ
+H	php:S1481"".Remove this unused "$sessions" local variable.(Ô´Š¡ùÿÿÿÿ
+F	php:S1481Q"1Remove this unused "$restaurants" local variable.(ùÑšÔ
+;	php:S2003"&Replace "require" with "require_once".(­ÀÙ
+@	php:S2003"&Replace "require" with "require_once".(úÉİúÿÿÿÿ
+;	php:S2003"&Replace "require" with "require_once".(…¨úí
+@	php:S2003#"&Replace "require" with "require_once".(½ç‚óüÿÿÿÿ
+;	php:S2003+"&Replace "require" with "require_once".(¶‹±ó
+@	php:S20032"&Replace "require" with "require_once".(³¥İüÿÿÿÿ
+;	php:S20037"&Replace "require" with "require_once".(Š›¤†
+;	php:S2003<"&Replace "require" with "require_once".(ºìÆ˜
+@	php:S2003R"&Replace "require" with "require_once".(½İ²Éıÿÿÿÿ
+;	php:S2003Y"&Replace "require" with "require_once".(–İ·
+@	php:S2003]"&Replace "require" with "require_once".(á²±İúÿÿÿÿ
+;	php:S2003b"&Replace "require" with "require_once".(ÍĞ£ª
+<	php:S2003’"&Replace "require" with "require_once".(¹…¡Å
+<	php:S2003—"&Replace "require" with "require_once".(¶ô é
+Q	php:S1155s"7Use empty() to check whether the array is empty or not.(ûäƒĞûÿÿÿÿ
+Ephp:S121¤"0Add curly braces around the nested statement(s).(ù²ÈÙ
+a	php:S4833"LReplace "require" with namespace import mechanism through the "use" keyword.(­ÀÙ
+f	php:S4833"LReplace "require" with namespace import mechanism through the "use" keyword.(úÉİúÿÿÿÿ
+a	php:S4833"LReplace "require" with namespace import mechanism through the "use" keyword.(…¨úí
+f	php:S4833#"LReplace "require" with namespace import mechanism through the "use" keyword.(½ç‚óüÿÿÿÿ
+a	php:S4833+"LReplace "require" with namespace import mechanism through the "use" keyword.(¶‹±ó
+f	php:S48332"LReplace "require" with namespace import mechanism through the "use" keyword.(³¥İüÿÿÿÿ
+a	php:S48337"LReplace "require" with namespace import mechanism through the "use" keyword.(Š›¤†
+a	php:S4833<"LReplace "require" with namespace import mechanism through the "use" keyword.(ºìÆ˜
+f	php:S4833R"LReplace "require" with namespace import mechanism through the "use" keyword.(½İ²Éıÿÿÿÿ
+a	php:S4833Y"LReplace "require" with namespace import mechanism through the "use" keyword.(–İ·
+f	php:S4833]"LReplace "require" with namespace import mechanism through the "use" keyword.(á²±İúÿÿÿÿ
+a	php:S4833b"LReplace "require" with namespace import mechanism through the "use" keyword.(ÍĞ£ª
+b	php:S4833’"LReplace "require" with namespace import mechanism through the "use" keyword.(¹…¡Å
+b	php:S4833—"LReplace "require" with namespace import mechanism through the "use" keyword.(¶ô é

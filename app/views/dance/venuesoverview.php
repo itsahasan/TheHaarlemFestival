@@ -4,7 +4,7 @@ include __DIR__ . '/../header.php';
 
 <div class="album py-5">
     <div class="container mb-5">
-        <h2 class="text-dark text-center mb-3">HF Dance Venues</h2>
+        <h2 class="text-dark text-center mb-5 display-3">Haarlem Festival Dance Venues</h2>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
             <?php
             foreach ($model as $venue) {
