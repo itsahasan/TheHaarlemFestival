@@ -99,15 +99,27 @@ class HistoryEventRepository
     }
 
     function updateHistoryEvent($historyevent, $id)
-    {
-        try {
-            $stmt = $this->connection->prepare("UPDATE history_event SET tickets_available = ?, price = ?, datetime = ?, location = ?, image = ?, tourguideID = ? WHERE id = ?");
+{
+    try {
+        $stmt = $this->connection->prepare("UPDATE history_event SET tickets_available = ?, price = ?, datetime = ?, location = ?, image = ?, tourguideID = ? WHERE id = ?");
 
-            $stmt->execute([$historyevent->getTicketsAvailable(), $historyevent->getPrice(), $historyevent->getDateTime(), $historyevent->getLocation(), $historyevent->getImage(), $historyevent->getTourguideID(), $id]);
-        } catch (PDOException $e) {
-            echo $e;
-        }
+        $stmt->execute([
+            $historyevent->getTicketsAvailable(),
+            $historyevent->getPrice(),
+            $historyevent->getDateTime(),
+            $historyevent->getLocation(),
+            $historyevent->getImage(),
+            $historyevent->getTourguideID(),
+            $id
+        ]);
+
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        echo $e;
+        return false; 
     }
+}
+
 
     function deleteHistoryEvent($id)
     {

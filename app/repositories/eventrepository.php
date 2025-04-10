@@ -236,18 +236,28 @@ public function getDanceEventsByDate($datetime)
     }
 
     function addEvent($event)
-    {
-        try {
-            $stmt = $this->connection->prepare("INSERT INTO music_event (type, artist, venue, ticket_price, tickets_available, datetime, image, name) VALUES (?,?,?,?,?,?,?,?)");
-            $stmt->execute([$event->getType(), $event->getArtist(), $event->getVenue(), $event->getTicket_Price(), $event->getTickets_Available(), $event->getDatetime(), $event->getImage(), $event->getName()]);
-            $event->setId($this->connection->lastInsertId());
-            $event->setProduct_id($this->connection->lastInsertId());
+{
+    try {
+        $stmt = $this->connection->prepare("INSERT INTO music_event (type, artist, venue, ticket_price, tickets_available, datetime, image, name) VALUES (?,?,?,?,?,?,?,?)");
+        $stmt->execute([
+            $event->getType(),
+            $event->getArtist(),
+            $event->getVenue(),
+            $event->getTicket_Price(),
+            $event->getTickets_Available(),
+            $event->getDatetime(),
+            $event->getImage(),
+            $event->getName()
+        ]);
 
-            return $this->getOne($event->getId());
-        } catch (PDOException $e) {
-            echo $e;
-        }
+        $event->setId($this->connection->lastInsertId());
+
+        return $this->getOne($event->getId());
+    } catch (PDOException $e) {
+        echo $e;
     }
+}
+
 
     function updateEvent($event, $id)
     {
@@ -262,16 +272,16 @@ public function getDanceEventsByDate($datetime)
     }
 
     function deleteEvent($id)
-    {
-        try {
-            $stmt = $this->connection->prepare("DELETE FROM music_event WHERE id = :id");
-            $stmt->bindParam(':id', $id);
-            $stmt->execute();
+{
+    try {
+        $stmt = $this->connection->prepare("DELETE FROM music_event WHERE id = ?");
+        $stmt->execute([$id]);
 
-            return;
-        } catch (PDOException $e) {
-            echo $e;
-        }
-        return true;
+        return $stmt->rowCount() > 0; // ✅ Return true if deleted
+    } catch (PDOException $e) {
+        echo $e;
+        return false;
     }
+}
+
 }

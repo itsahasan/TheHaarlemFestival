@@ -33,15 +33,11 @@ class HistoryEventController extends BaseController
 
     public function cms()
     {
-        if (isset($_POST["delete"])) {
-            $this->deleteHistoryEvent();
-        }
-        if (isset($_POST["add"])) {
-            $this->addHistoryEvent();
-        }
-        if (isset($_POST["update"])) {
-            $this->updateHistoryEvent();
-        }
+        $this->requireAdmin();
+
+        if (isset($_POST["delete"])) $this->deleteHistoryEvent();
+        if (isset($_POST["add"]))    $this->addHistoryEvent();
+        if (isset($_POST["update"])) $this->updateHistoryEvent();
 
         $model = $this->historyeventService->getAll();
         require __DIR__ . '/../views/cms/historyevent/index.php';
@@ -50,19 +46,17 @@ class HistoryEventController extends BaseController
     private function filterEventsByDate()
     {
         $dates = [
-            'friday' => '2025-07-28',
+            'friday'   => '2025-07-28',
             'saturday' => '2025-07-29',
-            'sunday' => '2025-07-30',
-            'monday' => '2025-07-31',
+            'sunday'   => '2025-07-30',
+            'monday'   => '2025-07-31',
         ];
 
-        foreach ($dates as $key => $date) {
-            if (isset($_POST[$key])) {
-                return $this->historyeventService->getHistoryEventsByDate("%$date%");
-            }
-        }
-
-        return $this->historyeventService->getAllInfo();
+        return $this->filterByDate(
+            $dates,
+            fn($date) => $this->historyeventService->getHistoryEventsByDate("%$date%"),
+            fn() => $this->historyeventService->getAllInfo()
+        );
     }
 
     private function deleteHistoryEvent()
@@ -74,7 +68,7 @@ class HistoryEventController extends BaseController
 
     private function addHistoryEvent()
     {
-        $event = $this->buildEventFromPost($_POST);
+        $event = $this->buildHistoryEventFromPost($_POST);
         $event->setImage($this->handleImageUpload('image', $this->historyeventService));
         $success = $this->historyeventService->addHistoryEvent($event);
         $this->showAlert($success, 'History Event added successfully!', 'Failed to add History Event.');
@@ -83,7 +77,7 @@ class HistoryEventController extends BaseController
     private function updateHistoryEvent()
     {
         $id = $this->sanitize($_GET["updateID"]);
-        $event = $this->buildEventFromPost($_POST, true);
+        $event = $this->buildHistoryEventFromPost($_POST, true);
         $existing = $this->historyeventService->getAHistoryEvent($id);
 
         $updatedImage = $this->handleImageUpload('changeImage', $this->historyeventService, $existing->getImage());
@@ -93,16 +87,5 @@ class HistoryEventController extends BaseController
 
         $success = $this->historyeventService->updateHistoryEvent($event, $id);
         $this->showAlert($success, 'History Event updated successfully!', 'Failed to update History Event.');
-    }
-
-    private function buildEventFromPost($post, $isUpdate = false)
-    {
-        $event = new HistoryEvent();
-        $event->setTicketsAvailable($this->getPost("tickets_available", "changedTickets_available"));
-        $event->setPrice($this->getPost("price", "changedPrice"));
-        $event->setDateTime($this->getPost("datetime", "changedDatetime"));
-        $event->setLocation($this->getPost("location", "changedLocation"));
-        $event->setTourguideID($this->getPost("tourguideID", "changedTourguideID"));
-        return $event;
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-// BaseController.php
 class BaseController
 {
     public function __construct()
@@ -10,6 +9,7 @@ class BaseController
         }
     }
 
+    // Access Control
     protected function requireLogin(): void
     {
         if (!isset($_SESSION['userId'])) {
@@ -21,12 +21,22 @@ class BaseController
         }
     }
 
+    protected function requireAdmin(): void
+    {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] != 1) {
+            echo "<script>alert('Access denied. Admins only.'); window.location.href = '/';</script>";
+            exit;
+        }
+    }
+
+    // Messaging
     protected function showAlert(bool $condition, string $successMsg, string $failMsg): void
     {
         $msg = $condition ? $successMsg : $failMsg;
         echo "<script>alert('$msg');</script>";
     }
 
+    // Input
     protected function sanitize(string $data): string
     {
         return htmlspecialchars(trim($data));
@@ -45,6 +55,7 @@ class BaseController
         return $params;
     }
 
+    // Uploads
     protected function handleImageUpload(string $field, $service, ?string $existingImage = null): ?string
     {
         if (isset($_FILES[$field]) && is_uploaded_file($_FILES[$field]['tmp_name'])) {
@@ -57,6 +68,7 @@ class BaseController
         return null;
     }
 
+    // Cart
     protected function handleAddToCart($cartService): void
     {
         if (isset($_POST['add-to-cart'])) {
@@ -78,13 +90,63 @@ class BaseController
         }
     }
 
-    protected function filterEventsByDateMap(array $map, callable $getEventsByDate, callable $getAllCallback): mixed
+    // Generic Date Filter
+    protected function filterByDate(array $dates, callable $dateCallback, callable $defaultCallback)
     {
-        foreach ($map as $key => $date) {
+        foreach ($dates as $key => $date) {
             if (isset($_POST[$key])) {
-                return $getEventsByDate("%$date%");
+                return $dateCallback($date);
             }
         }
-        return $getAllCallback();
+        return $defaultCallback();
+    }
+
+    // VENUE-Specific Helpers
+    protected function buildVenueFromPost(array $post, bool $isUpdate = false): Venue
+    {
+        $venue = new Venue();
+        $venue->setName($this->getPost($isUpdate ? "changedName" : "name"));
+        $venue->setDescription($this->getPost($isUpdate ? "changedDescription" : "description"));
+        $venue->setType($this->getPost($isUpdate ? "changedType" : "type"));
+        return $venue;
+    }
+
+    protected function handleVenueImages(Venue $venue, $service, ?Venue $existingVenue = null): void
+    {
+        $image = $this->handleImageUpload(
+            $existingVenue ? 'changedImage' : 'image1',
+            $service,
+            $existingVenue?->getImage()
+        );
+        if ($image) $venue->setImage($image);
+
+        $header = $this->handleImageUpload(
+            $existingVenue ? 'changedHeaderImage' : 'headerImg',
+            $service,
+            $existingVenue?->getHeaderImg()
+        );
+        if ($header) $venue->setHeaderImg($header);
+    }
+
+    protected function getFilteredVenues($service): array
+    {
+        if (isset($_POST["dance"])) {
+            return $service->getAllDanceVenues();
+        } elseif (isset($_POST["jazz"])) {
+            return $service->getAllJazzVenues();
+        }
+        return $service->getAll();
+    }
+
+    // HISTORY EVENT-Specific Helper
+    protected function buildHistoryEventFromPost(array $post, bool $isUpdate = false): HistoryEvent
+    {
+        $event = new HistoryEvent();
+        $event->setTicketsAvailable($this->getPost("tickets_available", "changedTickets_available"));
+        $event->setPrice($this->getPost("price", "changedPrice"));
+        $event->setDateTime($this->getPost("datetime", "changedDatetime"));
+        $event->setLocation($this->getPost("location", "changedLocation"));
+        $event->setTourguideID($this->getPost("tourguideID", "changedTourguideID"));
+        return $event;
     }
 }

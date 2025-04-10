@@ -28,7 +28,6 @@ class EventController extends BaseController
 
     public function danceevents()
     {
-        var_dump($_POST);
         $this->handleAddToCart($this->cartService);
         $model = $this->filterEventsByDate('dance');
         $passes = $this->ticketpassService->getDancePasses();
@@ -44,40 +43,46 @@ class EventController extends BaseController
     }
 
     private function filterEventsByDate($type)
-{
-    $dates = [
-        'wednesday' => '2025-07-26',
-        'thursday'  => '2025-07-27',
-        'friday'    => '2025-07-28',
-        'saturday'  => '2025-07-29',
-    ];
+    {
+        $dates = [
+            'wednesday' => '2025-07-26',
+            'thursday'  => '2025-07-27',
+            'friday'    => '2025-07-28',
+            'saturday'  => '2025-07-29',
+        ];
 
-    foreach ($dates as $key => $date) {
-        if (isset($_POST[$key])) {
-            $method = "get" . ucfirst($type) . "EventsByExactDate";
-            return $this->eventService->$method($date); 
+        foreach ($dates as $key => $date) {
+            if (isset($_POST[$key])) {
+                $method = "get" . ucfirst($type) . "EventsByExactDate";
+                return $this->eventService->$method($date);
+            }
         }
-    }
 
-    $method = "getAll" . ucfirst($type) . "Events";
-    return $this->eventService->$method();
-}
+        $method = "getAll" . ucfirst($type) . "Events";
+        return $this->eventService->$method();
+    }
 
     public function eventcms()
     {
-        if (!isset($_SESSION['role']) || $_SESSION['role'] != 1) {
-            echo "<script>alert('Access denied. Admins only.'); window.location.href = '/';</script>";
-            exit();
-        }
+        $this->requireAdmin();
+
+        $updateEvent = null;
 
         if (isset($_POST["delete"])) {
             $this->deleteEvent();
         }
+
         if (isset($_POST["add"])) {
             $this->addEvent();
         }
+
         if (isset($_POST["update"])) {
             $this->updateEvent();
+        }
+
+        if (isset($_POST["edit"])) {
+            $id = $this->sanitize($_GET["updateID"]);
+            $updateEvent = $this->eventService->getOne($id);
         }
 
         $model = $this->filterEventsByType();
@@ -100,8 +105,9 @@ class EventController extends BaseController
     public function addEvent()
     {
         $event = $this->buildEventFromPost($_POST);
-        $success = $this->eventService->addEvent($event);
-        $this->showAlert($success, 'Event added successfully.', 'Failed to add event.');
+        $created = $this->eventService->addEvent($event);
+
+        $this->showAlert($created !== null, 'Event added successfully.', 'Failed to add event.');
     }
 
     public function updateEvent()
@@ -109,6 +115,7 @@ class EventController extends BaseController
         $id = $this->sanitize($_GET["updateID"]);
         $event = $this->buildEventFromPost($_POST, true);
         $success = $this->eventService->updateEvent($event, $id);
+
         $this->showAlert($success, 'Event updated successfully.', 'Failed to update event.');
     }
 
@@ -116,6 +123,7 @@ class EventController extends BaseController
     {
         $id = $this->sanitize($_GET["deleteID"]);
         $success = $this->eventService->deleteEvent($id);
+
         $this->showAlert($success, 'Event deleted successfully.', 'Failed to delete event.');
     }
 
@@ -125,11 +133,15 @@ class EventController extends BaseController
         $event->setType($this->getPost("type", "updatedType"));
         $event->setArtist($this->getPost("artistName", "updatedArtistName"));
         $event->setVenue($this->getPost("venueName", "updatedVenueName"));
-        $event->setTicket_price($this->getPost("price", "updatedPrice"));
+
+        $rawPrice = $this->getPost("price", "updatedPrice");
+        $event->setTicket_price((int) preg_replace('/[^\d]/', '', $rawPrice)); // ensures int
+
         $event->setTickets_available($this->getPost("stock", "updatedStock"));
         $event->setDatetime($this->getPost("datetime", "updatedDatetime"));
-        $event->setImage(1);
+        $event->setImage(1); // static image for now
         $event->setName($event->getArtist());
+
         return $event;
     }
 }

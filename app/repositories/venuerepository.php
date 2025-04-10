@@ -116,14 +116,25 @@ class VenueRepository
     }
 
     function updateVenue($venue, $id)
-    {
-        try {
-            $stmt = $this->connection->prepare("UPDATE venue SET name = ?, description = ?, type = ?, image = ?, headerImg = ? WHERE id = ?");
-            $stmt->execute([$venue->getName(), $venue->getDescription(), $venue->getType(), $venue->getImage(), $venue->getHeaderImg(), $id]);
-        } catch (PDOException $e) {
-            echo $e;
-        }
+{
+    try {
+        $stmt = $this->connection->prepare("UPDATE venue SET name = ?, description = ?, type = ?, image = ?, headerImg = ? WHERE id = ?");
+        $stmt->execute([
+            $venue->getName(),
+            $venue->getDescription(),
+            $venue->getType(),
+            $venue->getImage(),
+            $venue->getHeaderImg(),
+            $id
+        ]);
+
+        return $stmt->rowCount() > 0; 
+    } catch (PDOException $e) {
+        echo $e;
+        return false; 
     }
+}
+
 
     function deleteVenue($id)
     {
