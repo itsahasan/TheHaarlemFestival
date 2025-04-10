@@ -270,9 +270,9 @@ class OrdersRepository
     }
 
     function getMyOrdersByUserId($user_id)
-{
-    try {
-        $stmt = $this->connection->prepare("
+    {
+        try {
+            $stmt = $this->connection->prepare("
             SELECT 
                 subq.event_id AS id,
                 COALESCE(NULLIF(subq.event_name, ''), 'History Event') AS event_name,
@@ -334,16 +334,16 @@ class OrdersRepository
             WHERE o.user_id = :user_id
         ");
 
-        $user_id = htmlspecialchars(strip_tags($user_id));
-        $stmt->bindParam(":user_id", $user_id);
-        $stmt->execute();
+            $user_id = htmlspecialchars(strip_tags($user_id));
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
 
-        $stmt->setFetchMode(PDO::FETCH_CLASS, 'OrdersItem');
-        return $stmt->fetchAll();
-    } catch (PDOException $e) {
-        echo $e;
+            $stmt->setFetchMode(PDO::FETCH_CLASS, 'OrdersItem');
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            echo $e;
+        }
     }
-}
 
     function countMyOrders($product_id)
     {

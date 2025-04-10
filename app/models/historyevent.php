@@ -65,7 +65,7 @@ class HistoryEvent
      */
     public function getPrice(): float
     {
-    return (float) $this->price;
+        return (float) $this->price;
     }
 
     /**
@@ -118,7 +118,7 @@ class HistoryEvent
 
     /**
      * Set the value of image
-     * 
+     *
      * @return self
      */
     public function setImage($image)
