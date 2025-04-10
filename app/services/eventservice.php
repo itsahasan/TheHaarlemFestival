@@ -64,4 +64,13 @@ class EventService
     {
         return $this->eventRepository->deleteEvent($id);
     }
+
+    public function getDanceEventsByExactDate($date)
+    {
+        return $this->eventRepository->getDanceEventsByExactDate($date);
+    }
+    public function getJazzEventsByExactDate($date)
+    {
+        return $this->eventRepository->getJazzEventsByExactDate( $date);
+    }
 }

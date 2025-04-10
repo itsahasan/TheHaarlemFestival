@@ -311,11 +311,11 @@ class YummyRepository extends Repository
     {
         $reservationid = htmlspecialchars($_GET['reservationid']);
         try {
-            $stmt = $this->connection->prepare("UPDATE reservation SET status = FALSE WHERE id = :id");
+            $stmt = $this->connection->prepare("UPDATE reservation SET status = 0 WHERE id = :id");
             $stmt->bindParam(':id', $reservationid);
             $stmt->execute();
         } catch (PDOException $e) {
-            echo ($e);
+            echo $e;
         }
     }
 

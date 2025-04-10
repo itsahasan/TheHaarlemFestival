@@ -65,9 +65,23 @@ class Restaurant
     public function getPhonenumber(): string { return $this->phonenumber; }
     public function setPhonenumber(string $value) { $this->phonenumber = $value; }
 
-    public function getEmail(): string { return $this->email; }
-    public function setEmail(string $value) { $this->email = $value; }
+	public function getEmail(): string
+	{
+		return $this->email;
+	}
 
-    public function getSeats(): int { return $this->seats; }
-    public function setSeats(int $value) { $this->seats = $value; }
+	public function setEmail(string $value)
+	{
+		$this->email = $value;
+	}
+	public function getSeats(): string
+	{
+		return $this->seats;
+	}
+
+	public function setSeats(int $value): void
+	{
+		$this->seats = $value;
+	}
+	
 }

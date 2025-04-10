@@ -1,5 +1,11 @@
 <?php
 include __DIR__ . '/../header.php';
+
+function getButtonClass($key) {
+    if (isset($_POST[$key])) return 'btn-success';
+    if (!isset($_POST['thursday']) && !isset($_POST['friday']) && !isset($_POST['saturday']) && $key === 'events') return 'btn-success';
+    return 'btn-primary';
+}
 ?>
 
 <head>
@@ -14,24 +20,15 @@ include __DIR__ . '/../header.php';
             festival, we want to recreate part of this festival by inviting some of the bands that
             previously performed there to play at the Patronaat. On Sunday, some of the bands will take
             to the big stage at the Grote Markt to perform for all visitors for free!</p>
+            
 
-        <div class="center my-3">
-            <form method="POST">
-                <input type="submit" name="events" value="All Events" class="btn btn-success mx-3 filterbtn"></a>
-            </form>
-            <form method="POST">
-                <input type="submit" name="wednesday" value="Wednesday 26" class="btn btn-primary mx-3 filterbtn"></a>
-            </form>
-            <form method="POST">
-                <input type="submit" name="thursday" value="Thursday 27" class="btn btn-primary mx-3 filterbtn"></a>
-            </form>
-            <form method="POST">
-                <input type="submit" name="friday" value="Friday 28" class="btn btn-primary mx-3 filterbtn"></a>
-            </form>
-            <form method="POST">
-                <input type="submit" name="saturday" value="Saturday 29" class="btn btn-primary mx-3 filterbtn"></a>
-            </form>
-        </div>
+        <form method="POST" class="text-center my-3">
+            <button type="submit" name="events" class="btn <?= getButtonClass('events') ?> mx-2">All Events</button>
+            <button type="submit" name="wednesday" class="btn <?= getButtonClass('wednesday') ?> mx-2">Wednesday 26</button>
+            <button type="submit" name="thursday" class="btn <?= getButtonClass('thursday') ?> mx-2">Thursday 27</button>
+            <button type="submit" name="friday" class="btn <?= getButtonClass('friday') ?> mx-2">Friday 28</button>
+            <button type="submit" name="saturday" class="btn <?= getButtonClass('saturday') ?> mx-2">Saturday 29</button>
+        </form>
 
         <div class="row my-3">
             <?php
