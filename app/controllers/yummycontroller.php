@@ -55,8 +55,12 @@ class YummyController
 
     public function deleteSession()
     {
+
         $this->yummyservice->deleteSession();
-        require __DIR__ . '/../views/cms/food/deletesession.php';
+
+
+        header("Location: /yummy/manageSessions");
+        exit;
     }
 
     public function saveSession()
