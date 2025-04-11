@@ -7,10 +7,10 @@ require __DIR__ . '/../header.php';
 </head>
 
 <div class="container py-5" style="background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-    <!-- Название ресторана -->
+
     <h2 class="text-center mb-4" style="font-weight: bold;">Restaurant <?= htmlspecialchars($restaurant->getName()) ?></h2>
 
-    <!-- Контактная информация + главное изображение -->
+
     <div class="row mb-5 align-items-start">
         <div class="col-md-4">
             <div class="p-3 border border-danger mb-3">
@@ -62,7 +62,7 @@ require __DIR__ . '/../header.php';
         </div>
     </div>
 
-    <!-- Бронирование -->
+    <!-- Reservation -->
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-sm p-4">

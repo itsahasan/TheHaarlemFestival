@@ -33,6 +33,7 @@ class YummyController
         require __DIR__ . '/../views/yummy/restaurantabout.php';
     }
 
+
     // ------------------------ CMS: Sessions ------------------------
     public function manageSessions()
     {
@@ -99,13 +100,13 @@ class YummyController
                 exit;
             }
 
-            // Обновление
+
             if (isset($_POST['update'])) {
                 $this->saveRestaurant();
                 exit;
             }
 
-            // Редактирование
+
             if (isset($_POST['edit'])) {
                 $restaurantToEdit = $this->yummyservice->getRestaurantByIdAlt($_POST['edit']);
             }
@@ -225,5 +226,61 @@ class YummyController
 
         $reservations = $this->yummyservice->getReservations();
         require __DIR__ . '/../views/cms/food/manageReservations.php';
+    }
+
+    public function addReservation()
+    {
+        try {
+            $restaurantid = htmlspecialchars($_GET['restaurantid']);
+
+            $reservation = new Reservation();
+
+            $sessionData = explode('-', $_POST['session']);
+            $selectedsession = $this->yummyservice->getSessionById($sessionData[0]);
+            $seats = $_POST['formguestsadult'] + $_POST['formguestskids'];
+
+            if ($selectedsession->getAvailable_seats() < $seats) {
+                throw new Exception("There are not enough available seats for this session");
+            }
+
+            $reservation->setName(htmlspecialchars($_POST['name']));
+            $reservation->setRestaurantID($restaurantid);
+            $reservation->setSessionID($sessionData[0]);
+            $reservation->setSeats($seats);
+
+            $datetime = $_POST['date'] . " " . $sessionData[1];
+            $reservation->setDate($datetime);
+            $reservation->setRequest($_POST['request'] != "" ? $_POST['request'] : "None");
+            $reservation->setPrice($seats * 10);
+
+            $this->yummyservice->addReservation($reservation);
+
+            if (isset($_SESSION['userId'])) {
+                $user_id = $_SESSION['userId'];
+                $product_id = $this->yummyservice->getReservationIdByName($reservation->getName());
+                $qty = $seats;
+
+                $cartItem = new ShoppingCartItem();
+
+                $cartItem->setUser_id($user_id);
+                $cartItem->setProduct_id($product_id);
+                $cartItem->setQty($qty);
+                if ($this->cartService->checkIfProductExistsInCart($user_id, $product_id)) {
+                    echo "<script>alert('This product is already in your shopping cart. You can change the quantity in the shopping cart page.')</script>";
+                } else {
+                    $this->cartService->addProductToCart($cartItem);
+                    $_SESSION['cartcount']++;
+                }
+            } else {
+                echo "<script>
+                    alert('You have to be logged in to add to cart.');
+                    window.location.href = '/login/index'
+                    </script>";
+            }
+        } catch (Exception $error) {
+            echo "<script>alert('" . $error->getMessage() . "')</script>";
+        } finally {
+            echo "<script>window.location.href = '/yummy'</script>";
+        }
     }
 }
