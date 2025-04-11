@@ -32,7 +32,7 @@ class YummyRepository extends Repository
     public function getRestaurants()
     {
         try {
-            // Убираем лишние повторы "AS image2, img3.image AS image3"
+
             $stmt = $this->connection->prepare("
             SELECT 
                 restaurant.id,
@@ -111,7 +111,7 @@ class YummyRepository extends Repository
             $stmt->bindParam(':id', $id);
             $stmt->execute();
             $stmt->setFetchMode(PDO::FETCH_CLASS, 'restaurant');
-            // Если не найдено, fetch вернёт false
+
             return $stmt->fetch();
         } catch (PDOException $e) {
             echo $e;
@@ -122,7 +122,7 @@ class YummyRepository extends Repository
     {
         try {
             if ($restaurant->getId() != 0) {
-                // Обновление
+
                 $stmt = $this->connection->prepare("
                 UPDATE `restaurant`
                 SET name = :name,
@@ -138,7 +138,7 @@ class YummyRepository extends Repository
             ");
                 $stmt->bindValue(':id', $restaurant->getId(), PDO::PARAM_INT);
             } else {
-                // Добавление
+
                 $stmt = $this->connection->prepare("
                 INSERT INTO `restaurant`
                    (name, location, description, cuisine, seats, stars, email, phonenumber, price, image1, image2, image3)
@@ -150,7 +150,7 @@ class YummyRepository extends Repository
                 $stmt->bindValue(':image3', $restaurant->getImage3(), PDO::PARAM_INT);
             }
 
-            // Общие bindValue для обоих случаев:
+
             $stmt->bindValue(':name',        $restaurant->getName());
             $stmt->bindValue(':location',    $restaurant->getLocation());
             $stmt->bindValue(':description', $restaurant->getDescription());
@@ -159,7 +159,7 @@ class YummyRepository extends Repository
             $stmt->bindValue(':stars',       $restaurant->getStars(), PDO::PARAM_INT);
             $stmt->bindValue(':email',       $restaurant->getEmail());
             $stmt->bindValue(':phonenumber', $restaurant->getPhonenumber());
-            // Вот это — ключевое! Привязываем price к :price
+
             $stmt->bindValue(':price',       $restaurant->getPrice());
 
             $stmt->execute();

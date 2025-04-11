@@ -93,7 +93,7 @@ class YummyController
                 exit;
             }
 
-            // Добавление
+
             if (isset($_POST['add'])) {
                 $this->saveRestaurant();
                 exit;
@@ -166,16 +166,16 @@ class YummyController
     // ------------------------ CMS: Reservations ------------------------
     public function manageReservations()
     {
-        // Деактивация (GET)
+
         if (isset($_GET['reservationid'])) {
             $this->yummyservice->deactivateReservation();
         }
-        // Добавление (POST)
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
             $restaurantid = (int)($_POST['restaurantid'] ?? 0);
             $sessionData  = explode('-', $_POST['session'] ?? '');
             $sessionIdStr = trim($sessionData[0] ?? '0');
-            // Приводим к int
+
             $sessionId    = (int)$sessionIdStr;
 
             $selectedSession = $this->yummyservice->getSessionById($sessionId);
@@ -222,7 +222,7 @@ class YummyController
             return;
         }
 
-        // Показ списка (по умолчанию)
+
         $reservations = $this->yummyservice->getReservations();
         require __DIR__ . '/../views/cms/food/manageReservations.php';
     }
