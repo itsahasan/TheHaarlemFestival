@@ -57,16 +57,25 @@ class BaseController
 
     // Uploads
     protected function handleImageUpload(string $field, $service, ?string $existingImage = null): ?string
-    {
-        if (isset($_FILES[$field]) && is_uploaded_file($_FILES[$field]['tmp_name'])) {
-            $image = file_get_contents($_FILES[$field]['tmp_name']);
-            return $existingImage
-                ? $service->updateImage($image, $existingImage)
-                : $service->saveImage($image);
-        }
+{
+    if (isset($_FILES[$field]) && is_uploaded_file($_FILES[$field]['tmp_name'])) {
+        $image = file_get_contents($_FILES[$field]['tmp_name']);
 
-        return null;
+        if ($existingImage) {
+            $updated = $service->updateImage($image, $existingImage);
+            if ($updated) {
+                return $existingImage; // keep the ID if update was successful
+            } else {
+                error_log("Failed to update image with ID: $existingImage for field: $field");
+                return null;
+            }
+        } else {
+            return $service->saveImage($image); // insert new
+        }
     }
+
+    return null;
+}
 
     // Cart
     protected function handleAddToCart($cartService): void

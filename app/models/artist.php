@@ -1,193 +1,122 @@
 <?php
+
 class Artist
 {
-    private int $id;
-    private string $name;
-    private string $description;
-    private string $type;
-    private string $headerImg;
-    private string $thumbnailImg;
-    private string $logo;
-    private string $spotify;
-    private string $image;
+    private ?int $id = null;
+    private ?string $name = null;
+    private ?string $description = null;
+    private ?string $type = null;
+    private ?string $headerImg = null;
+    private ?string $thumbnailImg = null;
+    private ?string $logo = null;
+    private ?string $spotify = null;
+    private ?string $image = null;
 
-    /**
-     * Get the value of id
-     */
-    public function getId()
+    // ID
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * Set the value of id
-     *
-     * @return  self
-     */
-    public function setId($id)
+    public function setId(int $id): self
     {
         $this->id = $id;
-
         return $this;
     }
 
-    /**
-     * Get the value of name
-     */
-    public function getName()
+    // Name
+    public function getName(): ?string
     {
         return $this->name;
     }
 
-    /**
-     * Set the value of name
-     *
-     * @return  self
-     */
-    public function setName($name)
+    public function setName(string $name): self
     {
         $this->name = $name;
-
         return $this;
     }
 
-    /**
-     * Get the value of description
-     */
-    public function getDescription()
+    // Description
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /**
-     * Set the value of description
-     *
-     * @return  self
-     */
-    public function setDescription($description)
+    public function setDescription(string $description): self
     {
         $this->description = $description;
-
         return $this;
     }
 
-    /**
-     * Get the value of type
-     */
-    public function getType()
+    // Type
+    public function getType(): ?string
     {
         return $this->type;
     }
 
-    /**
-     * Set the value of type
-     *
-     * @return  self
-     */
-    public function setType($type)
+    public function setType(string $type): self
     {
         $this->type = $type;
-
         return $this;
     }
 
-    /**
-     * Get the value of headerImg
-     */
-    public function getHeaderImg()
+    // Header Image
+    public function getHeaderImg(): ?string
     {
         return $this->headerImg;
     }
 
-    /**
-     * Set the value of headerImg
-     *
-     * @return  self
-     */
-    public function setHeaderImg($headerImg)
+    public function setHeaderImg(string $headerImg): self
     {
         $this->headerImg = $headerImg;
-
         return $this;
     }
 
-    /**
-     * Get the value of thumbnailImg
-     */
-    public function getThumbnailImg()
+    // Thumbnail Image
+    public function getThumbnailImg(): ?string
     {
         return $this->thumbnailImg;
     }
 
-    /**
-     * Set the value of thumbnailImg
-     *
-     * @return  self
-     */
-    public function setThumbnailImg($thumbnailImg)
+    public function setThumbnailImg(string $thumbnailImg): self
     {
         $this->thumbnailImg = $thumbnailImg;
-
         return $this;
     }
 
-    /**
-     * Get the value of logo
-     */
-    public function getLogo()
+    // Logo
+    public function getLogo(): ?string
     {
         return $this->logo;
     }
 
-    /**
-     * Set the value of logo
-     *
-     * @return  self
-     */
-    public function setLogo($logo)
+    public function setLogo(string $logo): self
     {
         $this->logo = $logo;
-
         return $this;
     }
 
-    /**
-     * Get the value of spotify
-     */
-    public function getSpotify()
+    // Spotify
+    public function getSpotify(): ?string
     {
         return $this->spotify;
     }
 
-    /**
-     * Set the value of spotify
-     *
-     * @return  self
-     */
-    public function setSpotify($spotify)
+    public function setSpotify(string $spotify): self
     {
         $this->spotify = $spotify;
-
         return $this;
     }
 
-    /**
-     * Get the value of image
-     */
-    public function getImage()
+    // Image
+    public function getImage(): ?string
     {
         return $this->image;
     }
 
-    /**
-     * Set the value of image
-     *
-     * @return  self
-     */
-    public function setImage($image)
+    public function setImage(string $image): self
     {
         $this->image = $image;
-
         return $this;
     }
 }

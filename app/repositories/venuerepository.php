@@ -136,22 +136,23 @@ class VenueRepository
 }
 
 
-    function deleteVenue($id)
-    {
-        try {
-            $stmt = $this->connection->prepare("DELETE v, i, i2
-            FROM venue as v, images as i, images as i2
-            WHERE v.id=:id AND i.id=v.image AND i2.id=v.headerImg");
-            $stmt->bindValue(':id', $id);
+function deleteVenue($id)
+{
+    try {
+        $stmt = $this->connection->prepare("DELETE v, i, i2
+            FROM venue AS v
+            JOIN images AS i ON i.id = v.image
+            JOIN images AS i2 ON i2.id = v.headerImg
+            WHERE v.id = :id");
 
-            $stmt->execute();
-
-            return;
-        } catch (PDOException $e) {
-            echo $e;
-        }
-        return true;
+        $stmt->bindValue(':id', $id);
+        return $stmt->execute(); // ✅ returns true/false
+    } catch (PDOException $e) {
+        error_log("❌ Venue delete failed: " . $e->getMessage());
+        return false;
     }
+}
+
 
     function saveImage(string $imgData)
     {

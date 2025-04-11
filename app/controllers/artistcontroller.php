@@ -59,14 +59,14 @@ class ArtistController extends BaseController
 
     public function artistcms()
     {
-        if (isset($_POST["delete"])) {
-            $this->deleteArtist();
-        }
-        if (isset($_POST["add"])) {
-            $this->addArtist();
-        }
-        if (isset($_POST["update"])) {
-            $this->updateArtist();
+        if (isset($_POST["delete"])) $this->deleteArtist();
+        if (isset($_POST["add"]))    $this->addArtist();
+        if (isset($_POST["update"])) $this->updateArtist();
+
+        $updateArtist = null;
+        if (isset($_GET['updateID'])) {
+            $id = $this->sanitize($_GET['updateID']);
+            $updateArtist = $this->artistService->getAnArtist($id);
         }
 
         $model = $this->getFilteredArtists();
@@ -87,16 +87,26 @@ class ArtistController extends BaseController
     {
         $artist = $this->buildArtistFromPost($_POST);
         $this->handleArtistImages($artist);
-        $success = $this->artistService->addArtist($artist);
+
+        $savedArtist = $this->artistService->addArtist($artist);
+        $success = $savedArtist instanceof Artist;
+
         $this->showAlert($success, 'Artist added successfully.', 'Failed to add artist.');
     }
 
     public function updateArtist()
     {
         $id = $this->sanitize($_GET["updateID"]);
-        $artist = $this->buildArtistFromPost($_POST);
+
+        // Get existing artist (for preserving image IDs)
         $existing = $this->artistService->getAnArtist($id);
+
+        // Build artist and preserve old images
+        $artist = $this->buildArtistFromPost($_POST, $existing);
+
+        // Update images if new files are uploaded
         $this->handleArtistImages($artist, $existing);
+
         $success = $this->artistService->updateArtist($artist, $id) ? true : false;
         $this->showAlert($success, 'Artist updated successfully.', 'Failed to update artist.');
     }
@@ -104,17 +114,25 @@ class ArtistController extends BaseController
     public function deleteArtist()
     {
         $id = $this->sanitize($_GET["deleteID"]);
-        $success = $this->artistService->deleteArtist($id);
+        $success = $this->artistService->deleteArtist($id) ?? false;
         $this->showAlert($success, 'Artist deleted successfully.', 'Failed to delete artist.');
     }
 
-    private function buildArtistFromPost($post)
+    private function buildArtistFromPost($post, $existing = null)
     {
         $artist = new Artist();
         $artist->setName($this->getPost("name", "changedName"));
         $artist->setDescription($this->getPost("description", "changedDescription"));
         $artist->setType($this->getPost("type", "changedType"));
         $artist->setSpotify($this->getPost("spotify", "changedSpotify"));
+
+        if ($existing) {
+            $artist->setHeaderImg($existing->getHeaderImg());
+            $artist->setThumbnailImg($existing->getThumbnailImg());
+            $artist->setLogo($existing->getLogo());
+            $artist->setImage($existing->getImage());
+        }
+
         return $artist;
     }
 
@@ -129,7 +147,9 @@ class ArtistController extends BaseController
 
         foreach ($fields as $field => $setter) {
             $changedField = isset($_FILES["changed{$field}"]) ? "changed{$field}" : $field;
-            $imagePath = $this->handleImageUpload($changedField, $this->artistService, $existing ? $existing->{"get" . ucfirst($field)}() : null);
+            $existingValue = $existing ? $existing->{"get" . ucfirst($field)}() : null;
+
+            $imagePath = $this->handleImageUpload($changedField, $this->artistService, $existingValue);
             if ($imagePath) {
                 $artist->$setter($imagePath);
             }

@@ -8,12 +8,18 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./app:/app
+    networks:
+      - app-network
+
   php:
     build:
       context: .
       dockerfile: PHP.Dockerfile
     volumes:
       - ./app:/app
+    networks:
+      - app-network
+
   mysql:
     image: mariadb:latest
     environment:
@@ -25,7 +31,10 @@ services:
       - mysqldata:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d
     ports:
-      - 3309:3306
+      - 3406:3306
+    networks:
+      - app-network
+
   phpmyadmin:
     image: phpmyadmin:latest
     ports:
@@ -33,5 +42,11 @@ services:
     environment:
       - PMA_HOST=mysql
       - UPLOAD_LIMIT=300M
+    networks:
+      - app-network
+
 volumes:
   mysqldata: {}
+
+networks:
+  app-network:

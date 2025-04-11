@@ -51,12 +51,18 @@ class VenueController extends BaseController
     }
 
     public function addVenue()
-    {
-        $venue = $this->buildVenueFromPost($_POST);
-        $this->handleVenueImages($venue, $this->venueService);
-        $success = $this->venueService->addVenue($venue);
-        $this->showAlert($success, 'Venue added successfully.', 'Failed to add venue.');
-    }
+{
+    $venue = $this->buildVenueFromPost($_POST);
+    $this->handleVenueImages($venue, $this->venueService);
+    
+    $savedVenue = $this->venueService->addVenue($venue);
+
+    // ✅ Convert to boolean: true if venue object was returned, false otherwise
+    $success = $savedVenue instanceof Venue;
+
+    $this->showAlert($success, 'Venue added successfully.', 'Failed to add venue.');
+}
+
 
     public function updateVenue()
     {
@@ -69,11 +75,12 @@ class VenueController extends BaseController
     }
 
     public function deleteVenue()
-    {
-        $id = $this->sanitize($_GET["deleteID"]);
-        $success = $this->venueService->deleteVenue($id);
-        $this->showAlert($success, 'Venue deleted successfully.', 'Failed to delete venue.');
-    }
+{
+    $id = $this->sanitize($_GET["deleteID"]);
+    $success = $this->venueService->deleteVenue($id) ?? false;
+    $this->showAlert($success, 'Venue deleted successfully.', 'Failed to delete venue.');
+}
+
 
     public function venuecms()
     {

@@ -150,30 +150,46 @@ class ArtistRepository
     }
 
     function updateArtist($artist, $id)
-    {
-        try {
-            $stmt = $this->connection->prepare("UPDATE artist SET name = ?, description = ?, type = ?, headerImg = ?, thumbnailImg = ?, logo = ?, spotify = ?, image = ? WHERE id = ?");
-            $stmt->execute([$artist->getName(), $artist->getDescription(), $artist->getType(), $artist->getHeaderImg(), $artist->getThumbnailImg(), $artist->getLogo(), $artist->getSpotify(), $artist->getImage(), $id]);
-        } catch (PDOException $e) {
-            echo $e;
-        }
+{
+    try {
+        $stmt = $this->connection->prepare("UPDATE artist SET name = ?, description = ?, type = ?, headerImg = ?, thumbnailImg = ?, logo = ?, spotify = ?, image = ? WHERE id = ?");
+        return $stmt->execute([
+            $artist->getName(),
+            $artist->getDescription(),
+            $artist->getType(),
+            $artist->getHeaderImg(),
+            $artist->getThumbnailImg(),
+            $artist->getLogo(),
+            $artist->getSpotify(),
+            $artist->getImage(),
+            $id
+        ]);
+    } catch (PDOException $e) {
+        echo $e;
+        return false;
     }
+}
+
 
     function deleteArtist($id)
     {
         try {
             $stmt = $this->connection->prepare("DELETE a, i, i1, i2, i3
-            FROM artist as a, images as i, images as i1, images as i2, images as i3
-            WHERE a.id=:id AND i.id=a.headerImg AND i1.id=a.thumbnailImg AND i2.id=a.logo AND i3.id=a.image");
+                FROM artist as a
+                JOIN images as i ON i.id = a.headerImg
+                JOIN images as i1 ON i1.id = a.thumbnailImg
+                JOIN images as i2 ON i2.id = a.logo
+                JOIN images as i3 ON i3.id = a.image
+                WHERE a.id = :id");
+    
             $stmt->bindParam(':id', $id);
-            $stmt->execute();
-
-            return;
+            return $stmt->execute(); // ✅ returns true/false
         } catch (PDOException $e) {
             echo $e;
+            return false; // ✅ fail-safe
         }
-        return true;
     }
+    
 
     function saveImage(string $imgData)
     {
@@ -190,18 +206,23 @@ class ArtistRepository
     }
 
     function updateImage($imgData, $id)
-    {
-        try {
-            $stmt = $this->connection->prepare("UPDATE images SET image = :image WHERE id = :id");
-            $stmt->bindValue(':image', $imgData);
-            $stmt->bindValue(':id', $id);
-            $stmt->execute();
+{
+    try {
+        $stmt = $this->connection->prepare("UPDATE images SET image = :image WHERE id = :id");
 
-            return $id;
-        } catch (PDOException $e) {
-            echo $e;
-        }
+        // ✅ Use correct BLOB handling
+        $stmt->bindParam(':image', $imgData, PDO::PARAM_LOB);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return true;
+    } catch (PDOException $e) {
+        error_log("❌ Failed to update image (ID $id): " . $e->getMessage());
+        return false;
     }
+}
+
 
     function getAnArtist($id)
     {
