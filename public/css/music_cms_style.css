@@ -1,0 +1,32 @@
+
+.section-title{
+     margin-bottom: 35px;
+ }
+ .section-title h2{
+     font-size: 30px;
+ }
+ 
+ .section-title p{
+     font-size: 16px;
+ }
+
+ .address-list li{
+     border-bottom: 1px solid #dadce0;
+     padding-bottom: 20px;
+     padding-top: 20px;
+     display: flex;
+     justify-content: flex-start;
+     gap: 30px;
+     align-items: flex-start;
+ }
+ .address-list li:last-child{
+     border-bottom: unset;
+     padding-bottom: 0px;
+ }
+ .address-list li span{
+     display: inline-block;
+     font-size: 17px;
+ }
+ .address-list li span:first-child{
+     min-width: 100px;
+ }

@@ -1,0 +1,73 @@
+.card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.card:hover a {
+  border-radius: 10px;
+}
+
+.card:hover h5 {
+  opacity: 70%;
+}
+
+.card a {
+  text-decoration: none;
+  color: inherit;
+  transition: border-radius 0.3s;
+}
+
+.card a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-banner-section{
+    position: relative;
+    min-height: 80vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.home-banner-section .content{
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: rgba(0,0,0,0.6);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+}
+.home-banner-section .content h1{
+    font-size: 30px;
+    color: #fff;
+    margin-bottom: 30px;
+    display: block;
+}
+.home-banner-section .content p{
+    color: #fff;
+    font-size: 17px;
+}
+
+.yummy-banner-img{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
