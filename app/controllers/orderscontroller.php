@@ -1,23 +1,25 @@
 <?php
-require __DIR__ . '/../services/shoppingcartservice.php';
-require __DIR__ . '/../services/ordersservice.php';
+require __DIR__ . '/../services/ShoppingCartService.php';
+require __DIR__ . '/../services/OrdersService.php';
 require_once __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . '/BaseController.php';
 
-class OrdersController
+class OrdersController extends BaseController
 {
     private $placeorderService;
     private $shoppingcartService;
     private $mollie;
 
-    function __construct()
+    public function __construct()
     {
-        $this->mollie = new \Mollie\Api\MollieApiClient();
-        $this->mollie->setApiKey("
-        test_5jaAakyFRh8n9cNuC8p8aQR8gF3jp3");
+        // Сначала вызываем конструктор родителя (BaseController)
+        parent::__construct();
 
+        // Теперь инициализируем нужные сервисы
         $this->placeorderService = new OrdersService();
         $this->shoppingcartService = new ShoppingCartService();
-        session_start();
+
+        // Код для Mollie здесь больше не нужен, он должен быть в PaymentService
     }
 
     public function cms()
@@ -120,7 +122,7 @@ class OrdersController
                                 $qty = $cartItems[$i]->getQty();
                                 $price = $cartItems[$i]->getEvent_price();
 
-                                $orderItem = new OrdersItem();
+                                $orderItem = new orderItem();
 
                                 $orderItem->setOrder_id($placeorder->getId());
                                 $orderItem->setProduct_id($ids);
@@ -189,4 +191,74 @@ class OrdersController
             echo "<script>alert('Order Was cancelled successfully'); window.location = '/';</script>";
         }
     }
+
+    public function create()
+    {
+        $this->requireLogin();
+
+        // Проверяем, что это POST запрос
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /orders/checkout');
+            exit;
+        }
+
+        $userId = (int)$_SESSION['userId'];
+        $cartItems = $this->shoppingcartService->getShoppingCartByUserId($userId);
+
+        if (empty($cartItems)) {
+            header('Location: /shoppingcart'); // Если корзина пуста, возвращаем
+            exit;
+        }
+
+        // Подсчитываем общую сумму
+        $total = 0;
+        foreach ($cartItems as $ci) {
+            $total += $ci->getQty() * $ci->getEvent_price();
+        }
+
+        // Создаем объект заказа СО ВСЕМИ ДАННЫМИ из формы
+        $order = new Order();
+        $order->setUserId($userId);
+        $order->setEmailAddress($_SESSION['userEmail']);
+        $order->setTotalPrice($total);
+
+        // Данные из POST
+        $order->setFirstName($this->getPost('firstName'));
+        $order->setLastName($this->getPost('lastName'));
+        $order->setBirthDate($this->getPost('birthdate'));
+        $order->setStreetAddress($this->getPost('streetAddress'));
+        $order->setCountry($this->getPost('country'));
+        $order->setZipCode($this->getPost('zipCode'));
+        $order->setPhoneNumber($this->getPost('phoneNumber'));
+
+        // Помещаем заказ в базу данных
+        $placedOrder = $this->placeorderService->placeOrder($order);
+
+        if ($placedOrder) {
+            // Сохраняем позиции заказа
+            foreach ($cartItems as $ci) {
+                $orderItem = new OrderItem();
+                $orderItem->setOrder_id($placedOrder->getId());
+                $orderItem->setProduct_id($ci->getProduct_id());
+                $orderItem->setQty($ci->getQty());
+                $orderItem->setPrice($ci->getEvent_price() * $ci->getQty());
+                $this->placeorderService->placeOneOrderItem($orderItem);
+                $this->placeorderService->updateTicketsAvailable($ci->getProduct_id(), $ci->getQty());
+            }
+
+            // Очищаем корзину
+            $this->shoppingcartService->emptyCartByUserId($userId);
+            $_SESSION['cartCount'] = 0;
+
+            // Все успешно! Перенаправляем на страницу ОПЛАТЫ
+            header('Location: /payment/checkout?orderId=' . $placedOrder->getId());
+            exit;
+        } else {
+            // Если по какой-то причине заказ все равно не создался, показываем ошибку
+            // (теперь это маловероятно)
+            echo "A critical error occurred while creating the order. Please contact support.";
+        }
+    }
+
+
 }

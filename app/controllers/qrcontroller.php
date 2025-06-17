@@ -12,7 +12,7 @@ class QrController
 
     function __construct()
     {
-        session_start();
+
         $this->ticketService = new TicketService();
     }
     public function index()

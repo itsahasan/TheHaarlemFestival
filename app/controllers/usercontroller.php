@@ -14,7 +14,7 @@ class UserController
     {
         $this->userService = new UserService();
         $this->mailer = new Mailer();
-        session_start();
+
     }
 
     public function index()

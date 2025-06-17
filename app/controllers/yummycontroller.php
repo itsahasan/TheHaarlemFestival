@@ -11,7 +11,7 @@ class YummyController
     {
         $this->yummyservice = new YummyService();
         $this->cartService = new ShoppingCartService();
-        session_start();
+
     }
 
     public function index()

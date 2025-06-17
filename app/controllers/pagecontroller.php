@@ -19,7 +19,7 @@ class PageController
         $this->pageCardService = new PageCardService();
         $this->eventService = new EventService();
         $this->historyEventService = new HistoryEventService();
-        session_start();
+
     }
 
     public function index()

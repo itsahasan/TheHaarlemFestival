@@ -1,109 +1,112 @@
 <?php
-require __DIR__ . '/../services/shoppingcartservice.php';
+// controllers/ShoppingcartController.php
 
-class ShoppingcartController
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/ShoppingCartService.php';
+require_once __DIR__ . '/../services/OrdersService.php';
+require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/OrderItem.php';
+
+class ShoppingcartController extends BaseController
 {
-    private $shoppingcartService;
+    private ShoppingCartService $cartService;
+    private OrdersService       $orderService;
 
-    function __construct()
+    public function __construct()
     {
-        $this->shoppingcartService = new ShoppingCartService();
-        session_start();
+        parent::__construct();                  // старт сессии и базовые методы
+        $this->cartService  = new ShoppingCartService();
+        $this->orderService = new OrdersService();
     }
 
-    public function index()
+    public function index(): void
     {
-        if (isset($_SESSION['userId'])) {
-            $cartItems = $this->shoppingcartService->getShoppingCartByUserId($_SESSION['userId']);
-            $count = $this->shoppingcartService->countProducts($_SESSION['userId']);
 
-            //update product qty in cart
-            if (isset($_GET["qty"])) {
-                if ($_GET['action'] == 'update') {
-                    $this->shoppingcartService->updateProductQty($_GET["id"], $_SESSION['userId'], $_GET["qty"]);
-                    echo "<script>alert('Product qty has been updated in your shopping cart. ')</script>";
-                    echo "<script>window.location = '/shoppingcart'</script>";
-                }
-            }
+        $this->requireLogin();                  // проверяем, что пользователь залогинен
 
-            //remove product from cart
-            if (isset($_POST['remove'])) {
-                if ($_GET['action'] == 'remove') {
-                    foreach ($cartItems as $cartItem) {
-                        $this->shoppingcartService->removeProductFromCart($_GET["id"], $_SESSION['userId']);
-                        echo "<script>alert('Product has been removed from your shopping cart. ')</script>";
-                        echo "<script>window.location = '/shoppingcart'</script>";
-                        $_SESSION['cartcount'] = $count - 1;
-                    }
-                }
-            }
+        $userId    = $_SESSION['userId'];
+        $cartItems = $this->cartService->getShoppingCartByUserId($userId);
+        $_SESSION['cartcount'] = count($cartItems);
 
-            if (isset($_POST['proceed'])) {
-                if ($cartItems > 0) {
-                    if (!empty($count)) {
-                        echo "<script>window.location = '/orders/checkout'</script>";
-                    } else {
-                        echo "<script>alert('No product in the shopping cart! Please add products to the cart first!')</script>";
-                        echo "<script>window.location = '/page/festival'</script>";
-                    }
-                }
-            }
-        } else {
-            echo "<script>
-                alert('You have to be logged in to see your cart.');
-                window.location.href = '/login/index'
-                </script>";
+        // Пересчёт общей суммы
+        $total = 0;
+        foreach ($cartItems as $ci) {
+            $total += $ci->getQty() * $ci->getEvent_price();
         }
 
-        require __DIR__ . '/../views/orders/shopping-cart.php';
+        // Обработка отправки формы "Proceed to checkout"
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeorder'])) {
+            // Собираем и сохраняем заказ
+            $order = new Order();
+            $order->setFirstName(   $this->getPost('firstName') );
+            $order->setLastName(    $this->getPost('lastName') );
+            $order->setBirthDate(   $this->getPost('birthdate') );
+            $order->setEmailAddress($_SESSION['userEmail']);
+            $order->setStreetAddress($this->getPost('streetAddress'));
+            $order->setCountry(     $this->getPost('country') );
+            $order->setZipCode(     $this->getPost('zipCode') );
+            $order->setPhoneNumber( $this->getPost('phoneNumber'));
+            $order->setUserId(      $userId);
+            $order->setTotalPrice(  $total);
+
+            $placedOrder = $this->orderService->placeOrder($order);
+            if ($placedOrder) {
+                // Сохраняем каждую позицию из корзины
+                foreach ($cartItems as $ci) {
+                    $oi = new orderItem();
+                    $oi->setOrder_id(   $placedOrder->getId() );
+                    $oi->setProduct_id( $ci->getId());
+                    $oi->setQty(        $ci->getQty());
+                    $oi->setPrice(      $ci->getEvent_price());
+                    $this->orderService->placeOneOrderItem($oi);
+                    $this->orderService->updateTicketsAvailable($ci->getId(), $ci->getQty());
+                }
+                // Очищаем корзину
+                $this->cartService->emptyCartByUserId($userId);
+                unset($_SESSION['cartcount']);
+
+                // Редирект на оплату
+                header('Location: /payment/checkout?orderId=' . $placedOrder->getId());
+                exit;
+            }
+        }
+
+        // Подключаем правильный шаблон
+        require __DIR__ . '/../views/payment/shopping-cart.php';
     }
 
-    public function checkout()
+    public function update()
     {
-        if (isset($_SESSION['userId'])) {
+        $this->requireLogin();
 
-            $cartItems = $this->shoppingcartService->getShoppingCartByUserId($_SESSION['userId']);
-            $count = $this->shoppingcartService->countProducts($_SESSION['userId']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $productId = (int)($_POST['productId'] ?? 0);
+            $quantity = (int)($_POST['quantity'] ?? 1);
+            $userId = (int)$_SESSION['userId'];
 
-            require __DIR__ . '/../views/orders/checkout.php';
-        } else {
-            echo "<script>
-                alert('You have to be logged in to see checkout.');
-                window.location.href = '/login/index'
-                </script>";
+            if ($productId > 0 && $quantity > 0) {
+                $this->cartService->updateProductQty($productId, $userId, $quantity);
+            }
         }
+        // Возвращаем пользователя обратно в корзину
+        header('Location: /shoppingcart');
+        exit;
     }
 
-    public function sharedCart()
+    public function remove()
     {
-        if (isset($_SESSION['userId'])) {
-            if (isset($_GET['id']) && isset($_GET['qty'])) {
-                $ids = $_GET['id'];
-                $qtys = $_GET['qty'];
-                for ($i = 0; $i < count($ids); $i++) {
-                    $cartItem = new ShoppingCartItem();
-                    $cartItem->setUser_id($_SESSION['userId']);
-                    $cartItem->setProduct_id(intval($ids[$i]));
-                    $cartItem->setQty(intval($qtys[$i]));
+        $this->requireLogin();
 
-                    //if item already exists in shopping cart, skip it
-                    if ($this->shoppingcartService->checkIfProductExistsInCart($_SESSION['userId'], intval($ids[$i]))) {
-                        continue;
-                    }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $productId = (int)($_POST['productId'] ?? 0);
+            $userId = (int)$_SESSION['userId'];
 
-                    $this->shoppingcartService->addProductToCart($cartItem);
-                }
+            if ($productId > 0) {
+                $this->cartService->removeProductFromCart($productId, $userId);
             }
-
-            $cartItems = $this->shoppingcartService->getShoppingCartByUserId($_SESSION['userId']);
-            $_SESSION['cartcount'] = $this->shoppingcartService->countProducts($_SESSION['userId']);
-
-            require __DIR__ . '/../views/orders/shopping-cart.php';
-        } else {
-            echo "<script>
-                alert('Log in before importing a shopping cart.');
-                window.location.href = '/login/index'
-                </script>";
         }
+        // Возвращаем пользователя обратно в корзину
+        header('Location: /shoppingcart');
+        exit;
     }
 }

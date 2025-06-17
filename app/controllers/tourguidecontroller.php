@@ -10,7 +10,7 @@ class TourGuideController
     function __construct()
     {
         $this->tourguideService = new TourGuideService();
-        session_start();
+
     }
 
     public function index()

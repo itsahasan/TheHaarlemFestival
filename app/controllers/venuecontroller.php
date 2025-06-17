@@ -17,7 +17,7 @@ class VenueController
         $this->venueService = new VenueService();
         $this->eventService = new EventService();
         $this->cartService = new ShoppingCartService();
-        session_start();
+
     }
 
     public function dancevenues()

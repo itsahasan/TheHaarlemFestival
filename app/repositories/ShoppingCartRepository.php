@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/../models/shoppingcartitem.php';
+require __DIR__ . '/../models/ShoppingCartItem.php';
 
 class ShoppingCartRepository
 {
@@ -126,41 +126,62 @@ class ShoppingCartRepository
     function getShoppingCartByUserId($user_id)
     {
         try {
-            $stmt = $this->connection->prepare("SELECT subq.event_id as id,
-            COALESCE(NULLIF(subq.event_name,''), 'History Event') AS event_name,
-            COALESCE(NULLIF(subq.event_price,''), 0) AS event_price,
-            ci.qty, ci.qty * COALESCE(NULLIF(subq.event_price,''), 0) AS subtotal
-            FROM shopping_cart_items ci
+            // Я поправил SELECT часть, чтобы включить все нужные поля из таблицы `ci` (shopping_cart_items)
+            $stmt = $this->connection->prepare("
+            SELECT
+                ci.id,
+                ci.user_id,
+                ci.product_id,
+                ci.qty,
+                COALESCE(NULLIF(subq.event_name, ''), 'Event') AS event_name,
+                COALESCE(subq.event_price, 0) AS event_price,
+                ci.qty * COALESCE(subq.event_price, 0) AS subtotal
+            FROM
+                shopping_cart_items AS ci
             LEFT JOIN (
-            SELECT music_event.id as event_id, artist.name as event_name, music_event.ticket_price as event_price, music_event.datetime as event_datetime, venue.name as event_location, music_event.tickets_available as stock, music_event.type as event_type
-            FROM music_event 
-            LEFT JOIN venue as venue ON venue.id = music_event.venue
-            LEFT JOIN artist as artist ON artist.id = music_event.artist
-            UNION
-            SELECT id as event_id, ticketpass.name as event_name, ticketpass.price as event_price, ticketpass.datetime as event_datetime, 'Haarlem' as event_location, 'no limit' as stock, ticketpass.type as event_type
-            FROM ticketpass 
-            UNION
-            SELECT id as event_id, 'History Event' as event_name, history_event.price as event_price, history_event.datetime as event_datetime, history_event.location as event_location, history_event.tickets_available as stock, 'history' as event_type
-            FROM history_event 
-            UNION
-            SELECT reservation.id as event_id, CONCAT('Reservation at ', restaurant.name) as event_name, reservation.price as event_price, reservation.date as event_datetime, restaurant.name as event_location, reservation.seats as stock, 'food' as event_type
-            FROM reservation 
-            LEFT JOIN restaurant as restaurant on restaurant.id = reservation.restaurantID
+                SELECT
+                    music_event.id AS event_id,
+                    artist.name AS event_name,
+                    music_event.ticket_price AS event_price
+                FROM music_event
+                LEFT JOIN artist ON artist.id = music_event.artist
+                UNION
+                SELECT
+                    id AS event_id,
+                    name AS event_name,
+                    price AS event_price
+                FROM ticketpass
+                UNION
+                SELECT
+                    id AS event_id,
+                    'History Event' AS event_name,
+                    price AS event_price
+                FROM history_event
+                UNION
+                SELECT
+                    reservation.id AS event_id,
+                    CONCAT('Reservation at ', restaurant.name) AS event_name,
+                    reservation.price AS event_price
+                FROM reservation
+                LEFT JOIN restaurant ON restaurant.id = reservation.restaurantID
             ) AS subq ON subq.event_id = ci.product_id
-            WHERE ci.user_id=:user_id");
+            WHERE
+                ci.user_id = :user_id
+        ");
 
-            $user_id = htmlspecialchars(strip_tags($user_id));
-
-            $stmt->bindParam(":user_id", $user_id);
+            $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
 
             $stmt->execute();
 
             $stmt->setFetchMode(PDO::FETCH_CLASS, 'ShoppingCartItem');
-            $item = $stmt->fetchAll();
+            $items = $stmt->fetchAll();
 
-            return $item;
+            return $items;
+
         } catch (PDOException $e) {
-            echo $e;
+            // В реальном проекте здесь должно быть логирование, а не echo
+            error_log("ShoppingCartRepository Error: " . $e->getMessage());
+            return []; // Возвращаем пустой массив в случае ошибки
         }
     }
 

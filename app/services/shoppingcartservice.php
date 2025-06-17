@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . '/../repositories/shoppingcartrepository.php';
+require __DIR__ . '/../repositories/ShoppingCartRepository.php';
 
 class ShoppingCartService
 {

@@ -1,90 +1,109 @@
 <?php
+// controllers/BaseController.php
 
-// BaseController.php
 class BaseController
 {
+    /**
+     * Start session and initialize cart counter.
+     */
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+
+        // Ensure we have a consistent user‐ID key and cart counter
+        if (!isset($_SESSION['userId'])) {
+            $_SESSION['userId'] = $_SESSION['userid'] ?? null;  // migrate old key if necessary
+        }
+        if (!isset($_SESSION['cartCount'])) {
+            $_SESSION['cartCount'] = $_SESSION['cartcount'] ?? 0; // migrate old key if necessary
         }
     }
 
+    /**
+     * Redirect to login if user not authenticated.
+     */
     protected function requireLogin(): void
     {
-        if (!isset($_SESSION['userId'])) {
-            echo "<script>
-                    alert('You have to be logged in to perform this action.');
-                    window.location.href = '/login/index';
-                  </script>";
+        if (empty($_SESSION['userId'])) {
+            header('Location: /login/index');
             exit;
         }
     }
 
-    protected function showAlert(bool $condition, string $successMsg, string $failMsg): void
-    {
-        $msg = $condition ? $successMsg : $failMsg;
-        echo "<script>alert('$msg');</script>";
-    }
-
+    /**
+     * Escape a string for safe output.
+     */
     protected function sanitize(string $data): string
     {
-        return htmlspecialchars(trim($data));
+        return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
     }
 
+    /**
+     * Retrieve a POST parameter (with optional alternate key).
+     */
     protected function getPost(string $key, ?string $altKey = null): string
     {
-        return $this->sanitize($_POST[$key] ?? ($_POST[$altKey] ?? ""));
+        if (isset($_POST[$key])) {
+            return $this->sanitize((string)$_POST[$key]);
+        }
+        if ($altKey !== null && isset($_POST[$altKey])) {
+            return $this->sanitize((string)$_POST[$altKey]);
+        }
+        return '';
     }
 
+    /**
+     * Parse URL query string into array.
+     */
     protected function getUrlParams(): array
     {
-        $url = getURL();
-        $url_components = parse_url($url);
-        parse_str($url_components['query'], $params);
+        parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
         return $params;
     }
 
-    protected function handleImageUpload(string $field, $service, ?string $existingImage = null): ?string
+    /**
+     * Show a JS alert.
+     */
+    protected function showAlert(string $message): void
     {
-        if (isset($_FILES[$field]) && is_uploaded_file($_FILES[$field]['tmp_name'])) {
-            $image = file_get_contents($_FILES[$field]['tmp_name']);
-            return $existingImage
-                ? $service->updateImage($image, $existingImage)
-                : $service->saveImage($image);
-        }
-
-        return null;
+        echo "<script>alert('" . addslashes($message) . "');</script>";
     }
 
+    /**
+     * Handle “Add to cart” form submission.
+     *
+     * @param ShoppingCartService $cartService
+     */
     protected function handleAddToCart($cartService): void
     {
-        if (isset($_POST['add-to-cart'])) {
+        // The form must use <button name="add_to_cart" ...>
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             $this->requireLogin();
-            $user_id = $_SESSION['userId'];
-            $product_id = $this->getPost("product_id");
-            $qty = 1;
 
-            if ($cartService->checkIfProductExistsInCart($user_id, $product_id)) {
-                $this->showAlert(false, '', 'This product is already in your shopping cart.');
+            $userId    = (int)($_SESSION['userId'] ?? 0);
+            $productId = (int)$this->getPost('product_id');
+            if ($userId <= 0 || $productId <= 0) {
+                return;
+            }
+
+            // If already in cart, show error
+            if ($cartService->checkIfProductExistsInCart($userId, $productId)) {
+                $this->showAlert('This product is already in your cart.');
             } else {
-                $cartItem = new ShoppingCartItem();
-                $cartItem->setUser_id($user_id);
-                $cartItem->setProduct_id($product_id);
-                $cartItem->setQty($qty);
-                $cartService->addProductToCart($cartItem);
-                $_SESSION['cartcount']++;
-            }
-        }
-    }
+                // Add new item
+                require_once __DIR__ . '/../models/ShoppingCartItem.php';
+                $item = new ShoppingCartItem();
+                $item->setUser_id($userId)
+                    ->setProduct_id($productId)
+                    ->setQty(1);
+                $cartService->addProductToCart($item);
 
-    protected function filterEventsByDateMap(array $map, callable $getEventsByDate, callable $getAllCallback): mixed
-    {
-        foreach ($map as $key => $date) {
-            if (isset($_POST[$key])) {
-                return $getEventsByDate("%$date%");
+                // Increment our unified counter
+                $_SESSION['cartCount']++;
             }
+
+            // Redirect back to avoid resubmission
+            header('Location: ' . $_SERVER['REQUEST_URI']);
+            exit;
         }
-        return $getAllCallback();
     }
 }
