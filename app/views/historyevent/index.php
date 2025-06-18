@@ -64,7 +64,7 @@ include __DIR__ . '/../header.php';
                         ?>
                             <h4 class="text-danger fw-bold">Only <?= ucfirst($historyevent->getTicketsAvailable()) ?> tickets left!</h4>
                             <div class="card-button">
-                                <form action="/historyevent" method="post">
+                                <form action="/historyevent/addToCart" method="post">
                                     <button class="btn btn-secondary" name="add-to-cart">Add to cart for <?= $historyevent->getPrice() ?>€</button>
                                     <input type="hidden" name="product_id" value="<?= $historyevent->getId() ?>">
                                 </form>
@@ -74,7 +74,7 @@ include __DIR__ . '/../header.php';
                         ?>
                             <h4 class="text-success fw-bold">Seats available: <?= ucfirst($historyevent->getTicketsAvailable()) ?></h4>
                             <div class="card-button col-xs-1">
-                                <form action="/historyevent" method="post">
+                                <form action="/historyevent/addToCart" method="post">
                                     <button class="btn btn-secondary" name="add-to-cart">Add to cart for <?= $historyevent->getPrice() ?>€</button>
                                     <input type="hidden" name="product_id" value="<?= $historyevent->getId() ?>">
                                 </form>

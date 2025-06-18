@@ -1,26 +1,23 @@
 <?php
 
 require_once 'BaseController.php';
-require __DIR__ . '/../services/artistservice.php';
-require __DIR__ . '/../services/albumservice.php';
-require __DIR__ . '/../services/eventservice.php';
-require __DIR__ . '/../services/shoppingcartservice.php';
-include_once __DIR__ . '/../views/getURL.php';
+require_once __DIR__ . '/../services/ArtistService.php';
+require_once __DIR__ . '/../services/AlbumService.php';
+require_once __DIR__ . '/../services/EventService.php';
+
 
 class ArtistController extends BaseController
 {
-    private $artistService;
-    private $albumService;
-    private $eventService;
-    private $cartService;
+    private ArtistService $artistService;
+    private AlbumService $albumService;
+    private EventService $eventService;
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
         $this->artistService = new ArtistService();
         $this->albumService = new AlbumService();
         $this->eventService = new EventService();
-        $this->cartService = new ShoppingCartService();
     }
 
     public function danceartists()
@@ -37,21 +34,28 @@ class ArtistController extends BaseController
 
     public function danceartistdetails()
     {
-        $this->handleAddToCart($this->cartService);
-        $params = $this->getUrlParams();
-        $this->loadArtistDetails($params['id'], 'dance');
+        $id = (int)($_GET['id'] ?? 0);
+        $this->loadArtistDetails($id, 'dance');
     }
 
     public function jazzartistdetails()
     {
-        $this->handleAddToCart($this->cartService);
-        $params = $this->getUrlParams();
-        $this->loadArtistDetails($params['id'], 'jazz');
+        $id = (int)($_GET['id'] ?? 0);
+        $this->loadArtistDetails($id, 'jazz');
     }
 
-    private function loadArtistDetails($id, $genre)
+    private function loadArtistDetails(int $id, string $genre)
     {
+        if ($id <= 0) {
+            header('Location: /');
+            exit;
+        }
         $model = $this->artistService->getOne($id);
+        if (!$model) {
+            $_SESSION['error_message'] = 'Artist not found.';
+            header('Location: /');
+            exit;
+        }
         $albums = $this->albumService->getAllAlbumsByArtist($id);
         $events = $this->eventService->getEventsByArtistName('%' . $model->getName() . '%');
         require __DIR__ . "/../views/{$genre}/artistdetails.php";

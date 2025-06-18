@@ -1,34 +1,26 @@
 <?php
+declare(strict_types=1);
 
-require_once 'BaseController.php';
-require __DIR__ . '/../services/eventservice.php';
-require __DIR__ . '/../services/artistservice.php';
-require __DIR__ . '/../services/venueservice.php';
-require __DIR__ . '/../services/ticketpassservice.php';
-require __DIR__ . '/../services/shoppingcartservice.php';
-include_once __DIR__ . '/../views/getURL.php';
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/EventService.php';
+require_once __DIR__ . '/../services/TicketPassService.php';
+require_once __DIR__ . '/../services/ShoppingCartService.php';
+require_once __DIR__ . '/../models/ShoppingCartItem.php';
 
 class EventController extends BaseController
 {
-    private $eventService;
-    private $artistService;
-    private $venueService;
-    private $ticketpassService;
-    private $cartService;
+    private EventService $eventService;
+    private TicketPassService $ticketpassService;
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
         $this->eventService = new EventService();
-        $this->artistService = new ArtistService();
-        $this->venueService = new VenueService();
         $this->ticketpassService = new TicketPassService();
-        $this->cartService = new ShoppingCartService();
     }
 
     public function danceevents()
     {
-        $this->handleAddToCart($this->cartService);
         $model = $this->filterEventsByDate('dance');
         $passes = $this->ticketpassService->getDancePasses();
         require __DIR__ . '/../views/dance/eventsoverview.php';
@@ -36,94 +28,60 @@ class EventController extends BaseController
 
     public function jazzevents()
     {
-        $this->handleAddToCart($this->cartService);
         $model = $this->filterEventsByDate('jazz');
         $passes = $this->ticketpassService->getJazzPasses();
         require __DIR__ . '/../views/jazz/eventsoverview.php';
     }
 
+    public function addToCart()
+    {
+        $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /');
+            exit;
+        }
+
+        $productId = (int)$this->getPost('product_id');
+        $quantity = (int)($this->getPost('quantity') ?: 1);
+
+        if ($productId <= 0 || $quantity <= 0) {
+            $_SESSION['error_message'] = 'Invalid product data.';
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+
+        $cartService = new ShoppingCartService();
+        if ($cartService->checkIfProductExistsInCart((int)$_SESSION['userId'], $productId)) {
+            $_SESSION['error_message'] = 'This item is already in your cart.';
+            header('Location: ' . $_SERVER['HTTP_REFERER']);
+            exit;
+        }
+
+        $item = new ShoppingCartItem();
+        $item->setUser_Id((int)$_SESSION['userId']);
+        $item->setProduct_Id($productId);
+        $item->setQty($quantity);
+
+        if ($cartService->addProductToCart($item)) {
+            $_SESSION['success_message'] = 'Item added to cart!';
+        } else {
+            $_SESSION['error_message'] = 'Could not add item to cart.';
+        }
+
+        header('Location: ' . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+
     private function filterEventsByDate($type)
     {
-        $dates = [
-            'wednesday' => '2025-07-26',
-            'thursday'  => '2025-07-27',
-            'friday'    => '2025-07-28',
-            'saturday'  => '2025-07-29',
-        ];
-
+        $dates = [ 'wednesday' => '2025-07-26', 'thursday'  => '2025-07-27', 'friday'    => '2025-07-28', 'saturday'  => '2025-07-29' ];
         foreach ($dates as $key => $date) {
             if (isset($_POST[$key])) {
                 $method = "get" . ucfirst($type) . "EventsByDate";
                 return $this->eventService->$method("%$date%");
             }
         }
-
         $method = "getAll" . ucfirst($type) . "Events";
         return $this->eventService->$method();
-    }
-
-    public function eventcms()
-    {
-        if (isset($_POST["delete"])) {
-            $this->deleteEvent();
-        }
-        if (isset($_POST["add"])) {
-            $this->addEvent();
-        }
-        if (isset($_POST["update"])) {
-            $this->updateEvent();
-        }
-
-        $model = $this->filterEventsByType();
-        $artists = $this->artistService->getAll();
-        $venues = $this->venueService->getAll();
-
-        require __DIR__ . '/../views/cms/music/musicevent-cms.php';
-    }
-
-    private function filterEventsByType()
-    {
-        if (isset($_POST["dance"])) {
-            return $this->eventService->getAllDanceEvents();
-        } elseif (isset($_POST["jazz"])) {
-            return $this->eventService->getAllJazzEvents();
-        }
-        return $this->eventService->getAll();
-    }
-
-    public function addEvent()
-    {
-        $event = $this->buildEventFromPost($_POST);
-        $success = $this->eventService->addEvent($event);
-        $this->showAlert($success, 'Event added successfully.', 'Failed to add event.');
-    }
-
-    public function updateEvent()
-    {
-        $id = $this->sanitize($_GET["updateID"]);
-        $event = $this->buildEventFromPost($_POST, true);
-        $success = $this->eventService->updateEvent($event, $id);
-        $this->showAlert($success, 'Event updated successfully.', 'Failed to update event.');
-    }
-
-    public function deleteEvent()
-    {
-        $id = $this->sanitize($_GET["deleteID"]);
-        $success = $this->eventService->deleteEvent($id);
-        $this->showAlert($success, 'Event deleted successfully.', 'Failed to delete event.');
-    }
-
-    private function buildEventFromPost($post, $isUpdate = false)
-    {
-        $event = new Music_Event();
-        $event->setType($this->getPost("type", "updatedType"));
-        $event->setArtist($this->getPost("artistName", "updatedArtistName"));
-        $event->setVenue($this->getPost("venueName", "updatedVenueName"));
-        $event->setTicket_price($this->getPost("price", "updatedPrice"));
-        $event->setTickets_available($this->getPost("stock", "updatedStock"));
-        $event->setDatetime($this->getPost("datetime", "updatedDatetime"));
-        $event->setImage(1);
-        $event->setName($event->getArtist());
-        return $event;
     }
 }

@@ -26,7 +26,7 @@ class ShoppingcartController extends BaseController
 
         $userId    = $_SESSION['userId'];
         $cartItems = $this->cartService->getShoppingCartByUserId($userId);
-        $_SESSION['cartcount'] = count($cartItems);
+
 
         // Пересчёт общей суммы
         $total = 0;

@@ -1,102 +1,50 @@
 <?php
-require __DIR__ . '/../repositories/yummyrepository.php';
+// app/services/YummyService.php
+
+require_once __DIR__ . '/../repositories/YummyRepository.php';
 
 class YummyService
 {
-    private $yummyrepository;
+    private YummyRepository $yummyRepository;
 
-    public function __construct()
-    {
-        $this->yummyrepository = new YummyRepository();
+    public function __construct() {
+        $this->yummyRepository = new YummyRepository();
     }
 
-    public function getFoodPageContent()
+    public function getRestaurants(): array
     {
-        return $this->yummyrepository->getFoodPageContent();
+        return $this->yummyRepository->getAllRestaurants();
     }
 
-    public function getFoodPageCards()
+    public function getRestaurantById(int $id): ?array
     {
-        return $this->yummyrepository->getFoodPageCards();
+        return $this->yummyRepository->getRestaurantById($id);
     }
 
-    public function getRestaurants()
+    public function getSessionsForRestaurant(int $restaurantId): array
     {
-        return $this->yummyrepository->getRestaurants();
+        return $this->yummyRepository->getSessionsForRestaurant($restaurantId);
     }
 
-    public function getRestaurantById($id)
+    public function getSessionById(int $id): ?Session
     {
-        return $this->yummyrepository->getRestaurantById($id);
+        return $this->yummyRepository->getSessionById($id);
     }
 
-    public function getRestaurantByIdAlt($id)
+    public function checkSeatsAvailable(int $sessionId, int $seats): bool
     {
-        return $this->yummyrepository->getRestaurantByIdAlt($id);
+        return $this->yummyRepository->checkSeatsAvailable($sessionId, $seats);
     }
 
-    public function getSessionsForRestaurant()
+    public function addReservation(Reservation $reservation): ?Reservation
     {
-        return $this->yummyrepository->getSessionsForRestaurant();
+        return $this->yummyRepository->addReservation($reservation);
     }
 
-    public function getSessions()
+    public function deleteReservationById(int $id): bool
     {
-        return $this->yummyrepository->getSessions();
+        return $this->yummyRepository->deleteReservationById($id);
     }
 
-    public function getSessionById($id)
-    {
-        return $this->yummyrepository->getSessionById($id);
-    }
-
-    public function saveSession(Session $session)
-    {
-        $this->yummyrepository->saveSession($session);
-    }
-
-    public function deleteSession()
-    {
-        $this->yummyrepository->deleteSession();
-    }
-
-    public function saveRestaurant(Restaurant $restaurant)
-    {
-        $this->yummyrepository->saveRestaurant($restaurant);
-    }
-
-    public function saveImage(string $imgData)
-    {
-        return $this->yummyrepository->saveImage($imgData);
-    }
-
-    public function updateImage(string $imgData, int $id)
-    {
-        return $this->yummyrepository->updateImage($imgData, $id);
-    }
-
-    public function deleteRestaurant()
-    {
-        $this->yummyrepository->deleteRestaurant();
-    }
-
-    public function getReservations()
-    {
-        return $this->yummyrepository->getReservations();
-    }
-
-    public function deactivateReservation()
-    {
-        $this->yummyrepository->deactivateReservation();
-    }
-
-    public function addReservation(Reservation $reservation)
-    {
-        $this->yummyrepository->addReservation($reservation);
-    }
-
-    public function getReservationIdByName($name)
-    {
-        return $this->yummyrepository->getReservationIdByName($name);
-    }
+    // Add other CMS pass-through methods here if needed
 }

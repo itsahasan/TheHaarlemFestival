@@ -25,10 +25,9 @@ class TicketService
         return $this->ticketRepository->updateTicketStatus($uuid);
     }
 
-    public function createTicket()
-    {
+    public function createTicket(int $orderItemId): ?Ticket {
         $uuid = $this->generateUuid();
-        return $this->ticketRepository->createTicket($uuid);
+        return $this->ticketRepository->createTicket($uuid, $orderItemId);
     }
 
     public function generateUuid()

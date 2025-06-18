@@ -2,7 +2,6 @@
 
 require_once 'BaseController.php';
 require __DIR__ . '/../services/historyeventservice.php';
-require __DIR__ . '/../services/shoppingcartservice.php';
 include_once __DIR__ . '/../views/getURL.php';
 
 class HistoryEventController extends BaseController
@@ -19,9 +18,52 @@ class HistoryEventController extends BaseController
 
     public function index()
     {
-        $this->handleAddToCart($this->cartService);
         $model = $this->filterEventsByDate();
         require __DIR__ . '/../views/historyevent/index.php';
+    }
+
+    public function addToCart()
+    {
+        $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /historyevent'); exit;
+        }
+
+        $productId = (int)$this->getPost('product_id');
+        // Так как в твоей форме нет выбора количества, по умолчанию ставим 1
+        $quantity = 1;
+
+        if ($productId <= 0 || $quantity <= 0) {
+            header('Location: /historyevent'); exit;
+        }
+
+        // Проверяем наличие билетов перед добавлением
+        $event = $this->historyeventService->getAHistoryEvent($productId);
+        if (!$event || $event->getTicketsAvailable() < $quantity) {
+            $_SESSION['error_message'] = 'Not enough tickets available!';
+            header('Location: /historyevent'); exit;
+        }
+
+        // Проверяем, нет ли уже такого товара в корзине
+        if ($this->cartService->checkIfProductExistsInCart((int)$_SESSION['userId'], $productId)) {
+            $_SESSION['error_message'] = 'This item is already in your cart.';
+            header('Location: /historyevent'); exit;
+        }
+
+        $item = new ShoppingCartItem();
+        $item->setUser_Id((int)$_SESSION['userId']);
+        $item->setProduct_id($productId);
+        $item->setQty($quantity);
+
+        if ($this->cartService->addProductToCart($item)) {
+            $_SESSION['success_message'] = 'Event added to cart!';
+        } else {
+            $_SESSION['error_message'] = 'Could not add event to cart.';
+        }
+
+        // Возвращаем пользователя на ту же страницу
+        header('Location: /historyevent');
+        exit;
     }
 
     public function historyEventDetails()

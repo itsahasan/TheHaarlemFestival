@@ -27,59 +27,76 @@ class LoginController
 
     public function validate()
     {
-        try {
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /login');
+            exit;
+        }
 
-                $username = isset($_POST['username']) ? $_POST['username'] : "";
-                $password = isset($_POST['password']) ? $_POST['password'] : "";
-                $user = $this->loginService->getByUsername($username);
-                if ($user != null) {
-                    if (password_verify($password, $user->getPassword())) {
-                        session_start();
-                        $_SESSION['userId'] = $user->getId();
-                        $_SESSION['role'] = $user->getRole();
-                        $_SESSION['userEmail'] = $user->getEmail();
-                        $_SESSION['loggedin'] = true;
-                        $shoppingCartCount = $this->shoppingcartService->countProducts($_SESSION['userId']);
-                        $_SESSION['cartcount'] = $shoppingCartCount;
-                        header('Location: /page');
-                    }
-                }
-                echo "Login error: Username or password incorrect.";
-                $this->index();
-            }
-        } catch (Exception $e) {
-            echo "An error occurred: " . $e->getMessage();
+        $username = $this->getPost('username'); // Используем безопасный метод из BaseController
+        $password = $_POST['password'] ?? ''; // Берем пароль как есть
+        $user = $this->loginService->getByUsername($username);
+
+        // Проверяем пользователя и пароль
+        if ($user && password_verify($password, $user->getPassword())) {
+            // Успешный вход
+            $_SESSION['userId'] = $user->getId();
+            $_SESSION['role'] = $user->getRole();
+            $_SESSION['userEmail'] = $user->getEmail();
+            $_SESSION['userName'] = $user->getUsername(); // Добавим для удобства
+
+            // Считаем товары в корзине
+            $shoppingCartCount = $this->shoppingCartService->countProducts($user->getId());
+            $_SESSION['cartCount'] = $shoppingCartCount;
+
+            header('Location: /'); // Редирект на главную страницу
+            exit;
+        } else {
+            // Неуспешный вход
+            $_SESSION['error_message'] = 'Login error: Username or password incorrect.';
+            header('Location: /login');
+            exit;
         }
     }
 
     public function register()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            require __DIR__ . '/../views/login/register.php';
+            return;
+        }
 
-            $username = $_POST['username'];
+        $username = $this->getPost('username');
+        $email = $this->getPost('email');
+        $password = $_POST['password'] ?? '';
 
-            $password = $_POST['password'];
-            $hashedPass = password_hash($password, PASSWORD_DEFAULT);
+        // Валидация
+        if (empty($username) || empty($email) || empty($password)) {
+            $_SESSION['error_message'] = 'All fields are required.';
+            header('Location: /login/register'); exit;
+        }
+        if (strlen($password) < 6) {
+            $_SESSION['error_message'] = 'Password must be at least 6 characters long.';
+            header('Location: /login/register'); exit;
+        }
+        if ($this->loginService->getByUsername($username)) {
+            $_SESSION['error_message'] = 'This username is already taken.';
+            header('Location: /login/register'); exit;
+        }
+        if ($this->loginService->getByEmail($email)) {
+            $_SESSION['error_message'] = 'This email is already registered.';
+            header('Location: /login/register'); exit;
+        }
 
-            $email = $_POST['email'];
-
-            // Validate updated information
-            if (empty($email) || !$this->loginService->getByEmail($email) == null) {
-                echo "<script>alert('email already exists!')</script>";
-                echo $this->display();
-            } else if (empty($username) || !$this->loginService->getByUsername($username) == null) {
-                echo "<script>alert('username already exists!')</script>";
-                $this->display();
-            } else if (strlen($password) < 6) {
-                echo "<script>alert('Password must be at least 6 characters long.')</script>";
-                $this->display();
-            } else {
-                if ($this->loginService->register($username, $hashedPass, $email)) {
-                    echo "<script>alert('Register successful! ')</script>";
-                    $this->index();
-                }
-            }
+        // Регистрация
+        $hashedPass = password_hash($password, PASSWORD_DEFAULT);
+        if ($this->loginService->register($username, $hashedPass, $email)) {
+            $_SESSION['success_message'] = 'Registration successful! Please log in.';
+            header('Location: /login');
+            exit;
+        } else {
+            $_SESSION['error_message'] = 'An error occurred during registration.';
+            header('Location: /login/register');
+            exit;
         }
     }
 
@@ -90,7 +107,10 @@ class LoginController
 
     public function logout()
     {
-        require __DIR__ . '/../views/login/logout.php';
+        session_unset();
+        session_destroy();
+        header('Location: /');
+        exit;
     }
 
     public function createCode()

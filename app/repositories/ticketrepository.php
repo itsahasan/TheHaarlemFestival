@@ -81,21 +81,21 @@ class TicketRepository
         }
     }
 
-    function createTicket($uuid)
+    function createTicket(string $uuid, int $orderItemId): ?Ticket
     {
         try {
             $uuid_binary = hex2bin(str_replace('0x', '', $uuid));
-
-            $stmt = $this->connection->prepare("INSERT INTO ticket (uuid, status) VALUES (:uuid, 'not scanned')");
+            $stmt = $this->connection->prepare("INSERT INTO ticket (uuid, status, order_item_id) VALUES (:uuid, 'not scanned', :orderItemId)");
             $stmt->bindParam(":uuid", $uuid_binary);
+            $stmt->bindParam(":orderItemId", $orderItemId);
             $stmt->execute();
 
             $ticket = new Ticket();
             $ticket->setUuid($uuid);
-
             return $ticket;
         } catch (PDOException $e) {
-            echo "Error creating ticket with xUUID " . $uuid . ": " . $e->getMessage();
+            error_log("Error creating ticket: " . $e->getMessage());
+            return null;
         }
     }
 

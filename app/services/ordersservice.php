@@ -14,6 +14,14 @@ class OrdersService
         $this->orderRepository = new OrdersRepository();
     }
 
+    /**
+     * ДОБАВЛЕНО: Передает вызов в репозиторий для проверки наличия билетов.
+     */
+    public function checkTicketsAvailable(int $product_id, int $quantity): bool
+    {
+        return $this->orderRepository->checkTicketsAvailable($product_id, $quantity);
+    }
+
     public function placeOrder(Order $order): ?Order
     {
         return $this->orderRepository->placeOrder($order);
@@ -29,11 +37,26 @@ class OrdersService
         return $this->orderRepository->updateTicketsAvailable($product_id, $qty);
     }
 
-    // Ты можешь добавить сюда другие методы, если они нужны,
-    // например, для получения истории заказов
+    public function deleteOrderById(int $orderId): bool
+    {
+        return $this->orderRepository->deleteOrderById($orderId);
+    }
+
+    // Ты можешь раскомментировать и доделать эти методы, когда они понадобятся
     public function getMyOrdersByUserId(int $userId): array
     {
         // return $this->orderRepository->getMyOrdersByUserId($userId);
-        return []; // Пока оставим пустым, чтобы не было ошибок
+        return [];
+    }
+
+    public function cancelOrder(int $userId): bool
+    {
+        // return $this->orderRepository->cancelOrder($userId);
+        return false;
+    }
+
+    public function getOrderItemsByOrderId(int $orderId): array
+    {
+        return $this->orderRepository->getOrderItemsByOrderId($orderId);
     }
 }

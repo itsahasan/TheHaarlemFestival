@@ -9,15 +9,6 @@ include __DIR__ . '/../header.php';
         <p>Unfortunately your payment did not go through.</p>
     </div>
 
-    <div class="d-flex justify-content-center mb-4">
-        <a href="/payment/paylater?orderId=<?= htmlspecialchars($order->getId()) ?>"
-           class="btn btn-primary me-3">
-            Pay Later
-        </a>
-        <a href="/orders/cancel" class="btn btn-secondary">
-            Cancel Order
-        </a>
-    </div>
 </div>
 
 <?php
