@@ -58,8 +58,8 @@ class EventController extends BaseController
         }
 
         $item = new ShoppingCartItem();
-        $item->setUser_Id((int)$_SESSION['userId']);
-        $item->setProduct_Id($productId);
+        $item->setUserId((int)$_SESSION['userId']);
+        $item->setProductId($productId);
         $item->setQty($quantity);
 
         if ($cartService->addProductToCart($item)) {
@@ -83,5 +83,11 @@ class EventController extends BaseController
         }
         $method = "getAll" . ucfirst($type) . "Events";
         return $this->eventService->$method();
+    }
+
+    public function eventcms()
+    {
+        $this->requireLogin();
+        echo "<h1>Events CMS</h1><p>This page will be implemented later.</p>";
     }
 }

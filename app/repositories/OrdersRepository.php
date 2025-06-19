@@ -120,8 +120,8 @@ class OrdersRepository
                 "INSERT INTO orders_item (order_id, product_id, qty, price) VALUES (:order_id, :product_id, :qty, :price)"
             );
             $stmt->execute([
-                ':order_id'   => $orderItem->getOrder_id(),
-                ':product_id' => $orderItem->getProduct_id(),
+                ':order_id'   => $orderItem->getOrderid(),
+                ':product_id' => $orderItem->getProductid(),
                 ':qty'        => $orderItem->getQty(),
                 ':price'      => $orderItem->getPrice(),
             ]);
@@ -194,6 +194,21 @@ class OrdersRepository
             return $stmt->fetchAll(\PDO::FETCH_CLASS, OrderItem::class);
         } catch (\PDOException $e) {
             error_log("getOrderItemsByOrderId error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getOrdersByUserId(int $userId): array
+    {
+        try {
+            $stmt = $this->connection->prepare(
+                "SELECT * FROM orders WHERE user_id = :userId ORDER BY created_at DESC"
+            );
+            $stmt->bindValue(':userId', $userId, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_CLASS, Order::class);
+        } catch (\PDOException $e) {
+            error_log("getOrdersByUserId error: " . $e->getMessage());
             return [];
         }
     }

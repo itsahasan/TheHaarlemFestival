@@ -47,8 +47,8 @@ class ShoppingCartRepository
         try {
             $stmt = $this->connection->prepare("INSERT INTO shopping_cart_items(user_id, product_id, qty) VALUES (:user_id, :product_id, :qty)");
 
-            $stmt->bindValue(":user_id", $shoppingCartItem->getUser_id());
-            $stmt->bindValue(":product_id", $shoppingCartItem->getProduct_id());
+            $stmt->bindValue(":user_id", $shoppingCartItem->getUserid());
+            $stmt->bindValue(":product_id", $shoppingCartItem->getProductid());
             $stmt->bindValue(":qty", $shoppingCartItem->getQty());
 
             if ($stmt->execute()) {

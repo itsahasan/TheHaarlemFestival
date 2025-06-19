@@ -31,7 +31,7 @@ class ShoppingcartController extends BaseController
         // Пересчёт общей суммы
         $total = 0;
         foreach ($cartItems as $ci) {
-            $total += $ci->getQty() * $ci->getEvent_price();
+            $total += $ci->getQty() * $ci->getEventprice();
         }
 
         // Обработка отправки формы "Proceed to checkout"

@@ -15,20 +15,20 @@ include __DIR__ . '/../header.php';
                         <?php foreach ($cartItems as $cartItem): ?>
                             <div class="row border border-dark rounded mb-2 align-items-center p-2">
                                 <div class="col-md-6">
-                                    <h5 class="pt-2">Event name: <?= htmlspecialchars($cartItem->getEvent_name()) ?></h5>
-                                    <p class="mb-1">Price per ticket: &euro; <?= number_format($cartItem->getEvent_price(), 2) ?></p>
+                                    <h5 class="pt-2">Event name: <?= htmlspecialchars($cartItem->getEventname()) ?></h5>
+                                    <p class="mb-1">Price per ticket: &euro; <?= number_format($cartItem->getEventprice(), 2) ?></p>
                                     <p class="mb-1">Qty: <?= $cartItem->getQty() ?></p>
-                                    <p class="mb-1"><strong>Subtotal: &euro; <?= number_format($cartItem->getQty() * $cartItem->getEvent_price(), 2) ?></strong></p>
+                                    <p class="mb-1"><strong>Subtotal: &euro; <?= number_format($cartItem->getQty() * $cartItem->getEventprice(), 2) ?></strong></p>
 
                                     <form action="/shoppingcart/remove" method="post" class="mt-2">
-                                        <input type="hidden" name="productId" value="<?= htmlspecialchars($cartItem->getProduct_id()) ?>">
+                                        <input type="hidden" name="productId" value="<?= htmlspecialchars($cartItem->getProductid()) ?>">
                                         <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                                     </form>
                                 </div>
 
                                 <div class="col-md-6">
                                     <form action="/shoppingcart/update" method="post">
-                                        <input type="hidden" name="productId" value="<?= htmlspecialchars($cartItem->getProduct_id()) ?>">
+                                        <input type="hidden" name="productId" value="<?= htmlspecialchars($cartItem->getProductid()) ?>">
                                         <div class="input-group">
                                             <span class="input-group-text">Update quantity:</span>
                                             <input type="number" name="quantity" value="<?= $cartItem->getQty() ?>" class="form-control" min="1">

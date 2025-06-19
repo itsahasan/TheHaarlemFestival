@@ -1,29 +1,33 @@
 <?php
 
 use PHPMailer\Mailer;
-
-require __DIR__ . '/../utils/mailer.php';
+require_once __DIR__ . '/BaseController.php';
 require __DIR__ . '/../services/userservice.php';
 
-class UserController
+class UserController extends BaseController
 {
-    private $userService;
-    private $mailer;
+    private UserService $userService;
 
-    function __construct()
+    public function __construct()
     {
+        parent::__construct();
         $this->userService = new UserService();
-        $this->mailer = new Mailer();
-
     }
 
     public function index()
     {
-        $model = $this->userService->getAll();
-        //$roles = $this->userService->getRoles();
+        $this->requireLogin();
+        // Add role check for admin
+        if ($_SESSION['role'] != 1) {
+            header('Location: /');
+            exit;
+        }
 
+        $users = $this->userService->getAll();
         require __DIR__ . '/../views/cms/user/index.php';
     }
+
+
     public function displayCreate()
     {
         $roles = $this->userService->getRoles();

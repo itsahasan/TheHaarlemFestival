@@ -1,6 +1,4 @@
 <?php
-// app/repositories/YummyRepository.php
-
 require_once __DIR__ . '/../models/Restaurant.php';
 require_once __DIR__ . '/../models/Session.php';
 require_once __DIR__ . '/../models/Reservation.php';
@@ -11,9 +9,8 @@ class YummyRepository
 
     public function __construct()
     {
-        // Database connection logic from your original file
         $configPath = __DIR__ . '/../config/dbconfig.php';
-        if (!file_exists($configPath)) { throw new \RuntimeException("Missing config file: $configPath"); }
+        if (!file_exists($configPath)) { throw new \RuntimeException("Missing config file"); }
         require $configPath;
         $dsn = sprintf('%s:host=%s;dbname=%s;charset=utf8mb4', $type, $servername, $database);
         try {
@@ -24,57 +21,81 @@ class YummyRepository
         }
     }
 
-    // ## Public user methods ##
-
-    public function getAllRestaurants(): array
+    public function getAllRestaurants()
     {
-        try {
-            $stmt = $this->connection->query("
-                SELECT 
-                    r.*, 
-                    img1.image AS image1_data
-                FROM restaurant AS r
-                LEFT JOIN images AS img1 ON r.image1 = img1.id
-                ORDER BY r.name
-            ");
-            // Возвращаем результат как массив ассоциативных массивов
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("getAllRestaurants error: " . $e->getMessage());
-            return [];
-        }
+        $stmt = $this->connection->query("SELECT r.*, img1.image AS image1_data, img2.image AS image2_data, img3.image AS image3_data FROM restaurant AS r LEFT JOIN images AS img1 ON r.image1 = img1.id LEFT JOIN images AS img2 ON r.image2 = img2.id LEFT JOIN images AS img3 ON r.image3 = img3.id ORDER BY r.name");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function getRestaurantById(int $id): ?array
+    public function getRestaurantById(int $id, bool $asArray = true)
     {
-        try {
-            $stmt = $this->connection->prepare("
-                SELECT 
-                    r.*, 
-                    img1.image AS image1_data, 
-                    img2.image AS image2_data, 
-                    img3.image AS image3_data
-                FROM restaurant AS r
-                LEFT JOIN images AS img1 ON r.image1 = img1.id
-                LEFT JOIN images AS img2 ON r.image2 = img2.id
-                LEFT JOIN images AS img3 ON r.image3 = img3.id
-                WHERE r.id = :id
-            ");
-            $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
-        } catch (PDOException $e) {
-            error_log("getRestaurantById error: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public function getSessionsForRestaurant(int $restaurantId): array
-    {
-        $stmt = $this->connection->prepare("SELECT * FROM food_session WHERE restaurantid = :id ORDER BY starttime");
-        $stmt->bindValue(':id', $restaurantId, \PDO::PARAM_INT);
+        $stmt = $this->connection->prepare("SELECT r.*, img1.image AS image1_data, img2.image AS image2_data, img3.image AS image3_data FROM restaurant AS r LEFT JOIN images AS img1 ON r.image1 = img1.id LEFT JOIN images AS img2 ON r.image2 = img2.id LEFT JOIN images AS img3 ON r.image3 = img3.id WHERE r.id = :id");
+        $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, Session::class);
+        if ($asArray) {
+            return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+        }
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Restaurant::class);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function createRestaurant(Restaurant $restaurant): bool
+    {
+        $stmt = $this->connection->prepare("INSERT INTO restaurant (name, location, description, cuisine, seats, stars, email, phonenumber, price, image1, image2, image3) VALUES (:name, :location, :description, :cuisine, :seats, :stars, :email, :phonenumber, :price, :image1, :image2, :image3)");
+        return $this->bindRestaurantValues($stmt, $restaurant)->execute();
+    }
+
+    public function updateRestaurant(Restaurant $restaurant): bool
+    {
+        $stmt = $this->connection->prepare("UPDATE restaurant SET name = :name, location = :location, description = :description, cuisine = :cuisine, seats = :seats, stars = :stars, email = :email, phonenumber = :phonenumber, price = :price, image1 = :image1, image2 = :image2, image3 = :image3 WHERE id = :id");
+        $stmt->bindValue(':id', $restaurant->getId(), \PDO::PARAM_INT);
+        return $this->bindRestaurantValues($stmt, $restaurant)->execute();
+    }
+
+    private function bindRestaurantValues(\PDOStatement $stmt, Restaurant $restaurant): \PDOStatement
+    {
+        $stmt->bindValue(':name', $restaurant->getName());
+        $stmt->bindValue(':location', $restaurant->getLocation());
+        $stmt->bindValue(':description', $restaurant->getDescription());
+        $stmt->bindValue(':cuisine', $restaurant->getCuisine());
+        $stmt->bindValue(':seats', $restaurant->getSeats(), \PDO::PARAM_INT);
+        $stmt->bindValue(':stars', $restaurant->getStars(), \PDO::PARAM_INT);
+        $stmt->bindValue(':email', $restaurant->getEmail());
+        $stmt->bindValue(':phonenumber', $restaurant->getPhonenumber());
+        $stmt->bindValue(':price', $restaurant->getPrice());
+        $stmt->bindValue(':image1', $restaurant->getImage1(), \PDO::PARAM_INT);
+        $stmt->bindValue(':image2', $restaurant->getImage2(), \PDO::PARAM_INT);
+        $stmt->bindValue(':image3', $restaurant->getImage3(), \PDO::PARAM_INT);
+        return $stmt;
+    }
+
+    public function deleteRestaurant(int $id): bool
+    {
+        $stmt = $this->connection->prepare("DELETE FROM restaurant WHERE id = :id");
+        $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function saveImage(string $imageData): int
+    {
+        $stmt = $this->connection->prepare('INSERT INTO images (image) VALUES (:image)');
+        $stmt->bindParam(':image', $imageData, \PDO::PARAM_LOB);
+        $stmt->execute();
+        return (int)$this->connection->lastInsertId();
+    }
+
+    public function updateImage(string $imageData, int $imageId): bool
+    {
+        $stmt = $this->connection->prepare('UPDATE images SET image = :image WHERE id = :id');
+        $stmt->bindParam(':image', $imageData, \PDO::PARAM_LOB);
+        $stmt->bindValue(':id', $imageId, \PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function getAllSessions(): array
+    {
+        $stmt = $this->connection->query("SELECT s.*, r.name as restaurantName FROM food_session s JOIN restaurant r ON s.restaurantid = r.id ORDER BY s.id");
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Session::class);
     }
 
     public function getSessionById(int $id): ?Session
@@ -86,50 +107,26 @@ class YummyRepository
         return $stmt->fetch() ?: null;
     }
 
-    public function checkSeatsAvailable(int $sessionId, int $requestedSeats): bool
+    public function saveSession(Session $session): bool
     {
-        try {
-            $stmt = $this->connection->prepare("SELECT available_seats FROM food_session WHERE id = :sessionId");
-            $stmt->bindValue(':sessionId', $sessionId, PDO::PARAM_INT);
-            $stmt->execute();
-            $availableSeats = $stmt->fetchColumn();
-
-            if ($availableSeats === false) { return false; } // Session not found
-            return (int)$availableSeats >= $requestedSeats;
-        } catch (PDOException $e) {
-            error_log("YummyRepository::checkSeatsAvailable error: " . $e->getMessage());
-            return false;
+        if ($session->getId() > 0) {
+            $stmt = $this->connection->prepare("UPDATE food_session SET restaurantid = :restaurantid, price = :price, reducedprice = :reducedprice, starttime = :starttime, session_length = :session_length, available_seats = :available_seats WHERE id = :id");
+            $stmt->bindValue(':id', $session->getId());
+        } else {
+            $stmt = $this->connection->prepare("INSERT INTO food_session (restaurantid, price, reducedprice, starttime, session_length, available_seats) VALUES (:restaurantid, :price, :reducedprice, :starttime, :session_length, :available_seats)");
         }
+        $stmt->bindValue(':restaurantid', $session->getRestaurantid());
+        $stmt->bindValue(':price', $session->getPrice());
+        $stmt->bindValue(':reducedprice', $session->getReducedprice());
+        $stmt->bindValue(':starttime', $session->getStarttime());
+        $stmt->bindValue(':session_length', $session->getSession_length());
+        $stmt->bindValue(':available_seats', $session->getAvailable_seats());
+        return $stmt->execute();
     }
 
-    public function addReservation(Reservation $reservation): ?Reservation
+    public function deleteSession(int $id): bool
     {
-        try {
-            $stmt = $this->connection->prepare(
-                "INSERT INTO reservation (name, restaurantID, sessionID, seats, date, request, price, status) 
-                 VALUES (:name, :restaurantID, :sessionID, :seats, :date, :request, :price, :status)"
-            );
-            $stmt->bindValue(':name', $reservation->getName());
-            $stmt->bindValue(':restaurantID', $reservation->getRestaurantID(), PDO::PARAM_INT);
-            $stmt->bindValue(':sessionID', $reservation->getSessionID(), PDO::PARAM_INT);
-            $stmt->bindValue(':seats', $reservation->getSeats(), PDO::PARAM_INT);
-            $stmt->bindValue(':date', $reservation->getDate());
-            $stmt->bindValue(':request', $reservation->getRequest());
-            $stmt->bindValue(':price', $reservation->getPrice());
-            $stmt->bindValue(':status', $reservation->getStatus(), PDO::PARAM_BOOL);
-            $stmt->execute();
-
-            $reservation->setId((int)$this->connection->lastInsertId());
-            return $reservation;
-        } catch (PDOException $e) {
-            error_log("YummyRepository::addReservation error: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public function deleteReservationById(int $id): bool
-    {
-        $stmt = $this->connection->prepare("DELETE FROM reservation WHERE id = :id");
+        $stmt = $this->connection->prepare("DELETE FROM food_session WHERE id = :id");
         $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
         return $stmt->execute();
     }

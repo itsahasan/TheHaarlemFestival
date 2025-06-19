@@ -51,8 +51,8 @@ class HistoryEventController extends BaseController
         }
 
         $item = new ShoppingCartItem();
-        $item->setUser_Id((int)$_SESSION['userId']);
-        $item->setProduct_id($productId);
+        $item->setUserId((int)$_SESSION['userId']);
+        $item->setProductid($productId);
         $item->setQty($quantity);
 
         if ($this->cartService->addProductToCart($item)) {
@@ -75,6 +75,11 @@ class HistoryEventController extends BaseController
 
     public function cms()
     {
+        $this->requireLogin(); // Роль админа
+
+        // Инициализируем переменную, чтобы она всегда существовала
+        $updateHistoryEvent = null;
+
         if (isset($_POST["delete"])) {
             $this->deleteHistoryEvent();
         }
@@ -83,6 +88,12 @@ class HistoryEventController extends BaseController
         }
         if (isset($_POST["update"])) {
             $this->updateHistoryEvent();
+        }
+
+        // ИСПРАВЛЕНО: Теперь переменная $updateHistoryEvent правильно создается
+        if (isset($_POST["edit"])) {
+            $id = htmlspecialchars($_GET["updateID"]);
+            $updateHistoryEvent = $this->historyeventService->getAHistoryEvent($id);
         }
 
         $model = $this->historyeventService->getAll();

@@ -29,6 +29,12 @@ class OrdersController extends BaseController
         require __DIR__ . '/../views/orders/checkout.php';
     }
 
+    public function cms()
+    {
+        $this->requireLogin(); // и роль админа
+        echo "<h1>Orders CMS</h1><p>This page will be implemented later.</p>";
+    }
+
     /**
      * Обрабатывает форму, создает заказ и перенаправляет на оплату
      */
@@ -90,7 +96,7 @@ class OrdersController extends BaseController
                 $this->ordersService->updateTicketsAvailable($ci->getProductId(), $ci->getQty());
 
                 $orderItem = new OrderItem();
-                $orderItem->setOrder_id($placedOrder->getId());
+                $orderItem->setOrderid($placedOrder->getId());
                 $orderItem->setProductId($ci->getProductId());
                 $orderItem->setQty($ci->getQty());
                 $orderItem->setPrice($ci->getEventPrice() * $ci->getQty());
@@ -111,7 +117,8 @@ class OrdersController extends BaseController
     public function myorders()
     {
         $this->requireLogin();
-        echo "<h1>My Orders</h1><p>This page will be implemented later.</p>";
+        $orders = $this->ordersService->getOrdersByUserId((int)$_SESSION['userId']);
+        require __DIR__ . '/../views/orders/myorders.php';
     }
 
     public function cancel()

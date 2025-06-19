@@ -1,73 +1,51 @@
 <?php
-class Restaurant
-{
+class Restaurant {
     private int $id;
-    private float|null $price = 0.0;
-    private string $name = '';
-    private string $cuisine = '';
-    private int $seats = 0;
-    private string $description = '';
-    private string $location = '';
-    private int $stars = 0;
-    private ?string $image1 = null;
-    private ?string $image2 = null;
-    private ?string $image3 = null;
-    private string $phonenumber = '';
-    private string $email = '';
+    private string $name;
+    private string $location;
+    private string $description;
+    private string $cuisine;
+    private int $stars;
+    private string $email;
+    private string $phonenumber;
+    private int $seats;
+    private float $price;
+    private int $image1;
+    private int $image2;
+    private int $image3;
+
+    private ?string $image1_data = null;
+    private ?string $image2_data = null;
+    private ?string $image3_data = null;
 
     public function getId(): int { return $this->id; }
-    public function setId(int $value) { $this->id = $value; }
-
+    public function setId(int $id): self { $this->id = $id; return $this; }
     public function getName(): string { return $this->name; }
-    public function setName(string $value) { $this->name = $value; }
-
-    public function getPrice(): float
-    {
-        // Если в БД пришёл null (неожиданно), можно вернуть 0.0
-        return $this->price ?? 0.0;
-    }
-
-    public function setPrice(float $value)
-    {
-        $this->price = $value;
-    }
-    public function getCuisine(): string { return $this->cuisine; }
-    public function setCuisine(string $value) { $this->cuisine = $value; }
-
-    public function getDescription(): string { return $this->description; }
-    public function setDescription(string $value) { $this->description = $value; }
-
+    public function setName(string $name): self { $this->name = $name; return $this; }
     public function getLocation(): string { return $this->location; }
-    public function setLocation(string $value) { $this->location = $value; }
-
+    public function setLocation(string $location): self { $this->location = $location; return $this; }
+    public function getDescription(): string { return $this->description; }
+    public function setDescription(string $description): self { $this->description = $description; return $this; }
+    public function getCuisine(): string { return $this->cuisine; }
+    public function setCuisine(string $cuisine): self { $this->cuisine = $cuisine; return $this; }
     public function getStars(): int { return $this->stars; }
-    public function setStars(int $value) { $this->stars = $value; }
-
-    public function getImage1(): ?string {
-        return $this->image1;
-    }
-    public function setImage1(?string $value) {
-        $this->image1 = $value;
-    }
-    public function getImage2(): ?string {
-        return $this->image2;
-    }
-    public function setImage2(?string $value) {
-        $this->image2 = $value;
-    }
-    public function getImage3(): ?string {
-        return $this->image3;
-    }
-    public function setImage3(?string $value) {
-        $this->image3 = $value;
-    }
-
-    public function getPhonenumber(): string { return $this->phonenumber; }
-    public function setPhonenumber(string $value) { $this->phonenumber = $value; }
-
+    public function setStars(int $stars): self { $this->stars = $stars; return $this; }
     public function getEmail(): string { return $this->email; }
-    public function setEmail(string $value) { $this->email = $value; }
-
+    public function setEmail(string $email): self { $this->email = $email; return $this; }
+    public function getPhonenumber(): string { return $this->phonenumber; }
+    public function setPhonenumber(string $phonenumber): self { $this->phonenumber = $phonenumber; return $this; }
     public function getSeats(): int { return $this->seats; }
-    public function setSeats(int $value) { $this->seats = $value; }
+    public function setSeats(int $seats): self { $this->seats = $seats; return $this; }
+    public function getPrice(): float { return $this->price; }
+    public function setPrice(float $price): self { $this->price = $price; return $this; }
+    public function getImage1(): int { return $this->image1; }
+    public function setImage1(int $image1): self { $this->image1 = $image1; return $this; }
+    public function getImage2(): int { return $this->image2; }
+    public function setImage2(int $image2): self { $this->image2 = $image2; return $this; }
+    public function getImage3(): int { return $this->image3; }
+    public function setImage3(int $image3): self { $this->image3 = $image3; return $this; }
+
+    public function getImage1Data(): ?string { return $this->image1_data; }
+    public function getImage2Data(): ?string { return $this->image2_data; }
+    public function getImage3Data(): ?string { return $this->image3_data; }
 }

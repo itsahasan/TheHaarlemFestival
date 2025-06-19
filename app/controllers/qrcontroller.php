@@ -1,46 +1,44 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../utils/qr-generator.php';
+// controllers/QRController.php
+declare(strict_types=1);
 
-require __DIR__ . '/../services/ticketservice.php';
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/TicketService.php';
 
-use Zxing\QrReader;
-
-class QrController
+class QRController extends BaseController
 {
-    private $ticketService;
+    private TicketService $ticketService;
 
-    function __construct()
+    public function __construct()
     {
-
+        parent::__construct();
         $this->ticketService = new TicketService();
     }
-    public function index()
-    {
-        require __DIR__ . '/../views/qr.php';
-    }
 
-    public function generateQr($uuid)
-    {
-        $qr = new QRGenerator();
-        //pass ticket id to generate QR
-        $qrcode = $qr->generateQR($uuid);
-        return $qrcode;
-    }
-
+    /**
+     * Обрабатывает переход по ссылке из QR-кода
+     */
     public function scan()
     {
-        if (isset($_SESSION['loggedin'])) {
-            $uuid = $_GET['qrCodeData'];
-            $ticket = $this->ticketService->checkIfTicketWasScanned($uuid);
-            if (!$ticket) {
-                //ticket was scanned or not existent in db.
-                echo "<script>alert('Ticket is invalid or was already scanned'); window.location = '/qr';</script>";
-            }
-            $this->ticketService->updateTicketStatus($uuid); //change status to scanned
-            echo "<script>alert('Ticket scanned successfully'); window.location = '/qr';</script>";
+        $uuid = $_GET['uuid'] ?? '';
+
+        if (empty($uuid)) {
+            die("Invalid Request: No ticket specified.");
+        }
+
+        // Пытаемся найти билет, который еще не был отсканирован
+        $ticket = $this->ticketService->checkIfTicketWasScanned($uuid);
+
+        if ($ticket) {
+            // Если билет найден и не отсканирован, обновляем его статус
+            $this->ticketService->updateTicketStatus($uuid);
+            // И перенаправляем на сайт Харлема в знак успеха
+            header('Location: https://www.visithaarlem.com/');
+            exit;
         } else {
-            echo "<script>alert('You must be logged in to access this page!'); window.location = '/';</script>";
+            // Если билет не найден или уже был отсканирован, выводим сообщение
+            // Можно создать красивую страницу для этого
+            die("Ticket is invalid or has already been used.");
         }
     }
 }

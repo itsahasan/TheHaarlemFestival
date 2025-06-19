@@ -1,8 +1,6 @@
 <?php
-// app/controllers/YummyController.php
 declare(strict_types=1);
 
-// All necessary classes are included at the top
 require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../services/YummyService.php';
 require_once __DIR__ . '/../models/Restaurant.php';
@@ -20,29 +18,15 @@ class YummyController extends BaseController
         $this->yummyService = new YummyService();
     }
 
-    // ## USER-FACING METHODS ##
-
-    /**
-     * Displays the main Yummy page with a list of all restaurants.
-     */
     public function index()
     {
         $restaurants = $this->yummyService->getRestaurants();
         require __DIR__ . '/../views/yummy/index.php';
     }
 
-    /**
-     * Displays the detail page for a single restaurant.
-     */
     public function about()
     {
         $restaurantId = (int)($_GET["restaurantid"] ?? 0);
-        if ($restaurantId <= 0) {
-            $_SESSION['error_message'] = 'Invalid restaurant ID.';
-            header('Location: /yummy');
-            exit;
-        }
-
         $restaurant = $this->yummyService->getRestaurantById($restaurantId);
         if (!$restaurant) {
             $_SESSION['error_message'] = 'Restaurant not found.';
@@ -54,9 +38,6 @@ class YummyController extends BaseController
         require __DIR__ . '/../views/yummy/restaurantabout.php';
     }
 
-    /**
-     * Handles the reservation form submission, creates a reservation, and adds it to the cart.
-     */
     public function addReservation()
     {
         $this->requireLogin();
@@ -68,7 +49,6 @@ class YummyController extends BaseController
         $restaurantId = (int)($_GET['restaurantid'] ?? 0);
 
         try {
-            // Step 1: Validate input
             $sessionData = explode('-', $this->getPost('session'));
             $sessionId = (int)($sessionData[0] ?? 0);
             $seats = (int)$this->getPost('formguestsadult') + (int)$this->getPost('formguestskids');
@@ -76,30 +56,37 @@ class YummyController extends BaseController
             if ($seats <= 0) { throw new Exception("You must select at least one guest."); }
             if ($sessionId <= 0) { throw new Exception("Please select a valid time session."); }
 
-            // Step 2: Check for availability - this fixes the error
             if (!$this->yummyService->checkSeatsAvailable($sessionId, $seats)) {
                 throw new Exception("There are not enough available seats for this session.");
             }
 
-            // Step 3: Create Reservation object
-            $reservation = $this->buildReservationFromPost($restaurantId, $sessionId, $seats, $sessionData[1]);
+            $reservation = new Reservation();
+            $reservation->setName($_SESSION['userName'] ?? 'User');
+            $reservation->setRestaurantID($restaurantId);
+            $reservation->setSessionID($sessionId);
+            $reservation->setSeats($seats);
+            $reservation->setDate($this->getPost('date') . " " . ($sessionData[1] ?? '00:00'));
+            $reservation->setRequest($this->getPost('request') ?: "None");
+            $reservation->setPrice($seats * 10);
+            $reservation->setStatus(true);
 
-            // Step 4: Save reservation and add to cart
             $newReservation = $this->yummyService->addReservation($reservation);
             if (!$newReservation) {
                 throw new Exception("Could not save the reservation.");
             }
 
+            $this->yummyService->decreaseSessionSeats($sessionId, $seats);
+
             $cartService = new ShoppingCartService();
             $item = new ShoppingCartItem();
-            $item->setUser_Id((int)$_SESSION['userId']);
-            $item->setProduct_Id($newReservation->getId());
-            $item->setQty(1); // A reservation is always 1 item in the cart
+            $item->setUserId((int)$_SESSION['userId']);
+            $item->setProductId($newReservation->getId());
+            $item->setQty(1);
 
             if ($cartService->addProductToCart($item)) {
                 $_SESSION['success_message'] = 'Reservation added to your cart!';
             } else {
-                $this->yummyService->deleteReservationById($newReservation->getId()); // Rollback if cart add fails
+                $this->yummyService->deleteReservationById($newReservation->getId());
                 throw new Exception("Could not add reservation to your cart.");
             }
         } catch (Exception $e) {
@@ -110,109 +97,95 @@ class YummyController extends BaseController
         exit;
     }
 
-    /**
-     * A private helper method to build a Reservation object from POST data.
-     */
-    private function buildReservationFromPost(int $restaurantId, int $sessionId, int $seats, string $time): Reservation
-    {
-        $reservation = new Reservation();
-        $reservation->setName($_SESSION['userName'] ?? 'Unknown User');
-        $reservation->setRestaurantID($restaurantId);
-        $reservation->setSessionID($sessionId);
-        $reservation->setSeats($seats);
-        $reservation->setDate($this->getPost('date') . " " . $time);
-        $reservation->setRequest($this->getPost('request') ?: "None");
-        $reservation->setPrice($seats * 10); // Example price: 10 per seat
-        $reservation->setStatus(true);
-        return $reservation;
-    }
-
-    // ## CMS (Content Management System) methods ##
-
-    /**
-     * [CMS] Displays the main page for managing restaurants.
-     */
     public function manageRestaurants()
     {
-        $this->requireLogin(); // In a real app, you'd add a role check here
+        $this->requireLogin();
 
-        $restaurants = $this->yummyService->getRestaurants();
-
-        // This part handles the edit form display
         $restaurantToEdit = null;
-        if (isset($_POST['edit'])) {
-            $restaurantToEdit = $this->yummyService->getRestaurantByIdAlt($_POST['edit']);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
+            $restaurantToEdit = $this->yummyService->getRestaurantById((int)$_POST['edit'], false);
         }
 
+        $restaurants = $this->yummyService->getRestaurants();
         require __DIR__ . '/../views/cms/food/managerrestaurants.php';
     }
 
-    /**
-     * [CMS] Handles both creating a new restaurant and updating an existing one.
-     */
     public function saveRestaurant()
     {
         $this->requireLogin();
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !(isset($_POST['add']) || isset($_POST['update']))) {
-            header('Location: /yummy/manageRestaurants');
-            exit;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /yummy/manageRestaurants'); exit;
         }
 
-        // The logic for handling images is complex and kept from your original code.
-        // In a real app, this should be moved to a dedicated ImageService.
-        // ... (your image handling logic here) ...
-
-        // Build the restaurant object from POST data
+        $isUpdate = !empty($this->getPost('id'));
         $restaurant = new Restaurant();
-        $restaurant->setId((int)($this->getPost('id')));
+        $restaurant->setId((int)$this->getPost('id'));
         $restaurant->setName($this->getPost('name'));
-        // ... set all other properties from POST ...
+        $restaurant->setLocation($this->getPost('location'));
+        $restaurant->setDescription($this->getPost('description'));
+        $restaurant->setCuisine($this->getPost('cuisine'));
+        $restaurant->setSeats((int)$this->getPost('seats'));
+        $restaurant->setStars((int)$this->getPost('stars'));
+        $restaurant->setEmail($this->getPost('email'));
+        $restaurant->setPhonenumber($this->getPost('phonenumber'));
+        $restaurant->setPrice((float)$this->getPost('price'));
+
+        $existingRestaurant = $isUpdate ? $this->yummyService->getRestaurantById($restaurant->getId(), false) : null;
+
+        for ($i = 1; $i <= 3; $i++) {
+            $setMethod = "setImage" . $i;
+            $getMethod = "getImage" . $i;
+            $fileKey = 'image' . $i;
+
+            if (isset($_FILES[$fileKey]) && is_uploaded_file($_FILES[$fileKey]['tmp_name'])) {
+                $imageData = file_get_contents($_FILES[$fileKey]['tmp_name']);
+                if ($isUpdate && $existingRestaurant && $existingRestaurant->$getMethod() > 0) {
+                    $this->yummyService->updateImage($imageData, $existingRestaurant->$getMethod());
+                    $restaurant->$setMethod($existingRestaurant->$getMethod());
+                } else {
+                    $restaurant->$setMethod($this->yummyService->saveImage($imageData));
+                }
+            } elseif ($isUpdate && $existingRestaurant) {
+                $restaurant->$setMethod($existingRestaurant->$getMethod());
+            }
+        }
 
         if ($this->yummyService->saveRestaurant($restaurant)) {
             $_SESSION['success_message'] = 'Restaurant saved successfully.';
         } else {
-            $_SESSION['error_message'] = 'Could not save the restaurant.';
+            $_SESSION['error_message'] = 'Could not save restaurant.';
         }
-
         header("Location: /yummy/manageRestaurants");
         exit;
     }
 
-    /**
-     * [CMS] Handles deleting a restaurant.
-     */
     public function deleteRestaurant()
     {
         $this->requireLogin();
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['delete'])) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['delete_id'])) {
             header('Location: /yummy/manageRestaurants');
             exit;
         }
 
-        $restaurantId = (int)$_POST['delete'];
-        if ($this->yummyService->deleteRestaurant($restaurantId)) {
-            $_SESSION['success_message'] = 'Restaurant deleted.';
-        } else {
-            $_SESSION['error_message'] = 'Error deleting restaurant.';
+        $idToDelete = (int)$this->getPost('delete_id');
+        if ($idToDelete > 0) {
+            if ($this->yummyService->deleteRestaurant($idToDelete)) {
+                $_SESSION['success_message'] = 'Restaurant deleted.';
+            } else {
+                $_SESSION['error_message'] = 'Error deleting restaurant.';
+            }
         }
-
         header("Location: /yummy/manageRestaurants");
         exit;
     }
 
-    /**
-     * [CMS] Displays the page for managing sessions.
-     */
     public function manageSessions()
     {
         $this->requireLogin();
-        $sessions = $this->yummyService->getSessions();
+        $sessions = $this->yummyService->getAllSessions();
         require __DIR__ . '/../views/cms/food/managesessions.php';
     }
 
-    /**
-     * [CMS] Displays the form to add a new session.
-     */
     public function addSession()
     {
         $this->requireLogin();
@@ -220,54 +193,56 @@ class YummyController extends BaseController
         require __DIR__ . '/../views/cms/food/addsession.php';
     }
 
-    /**
-     * [CMS] Displays the form to edit an existing session.
-     */
     public function editSession()
     {
         $this->requireLogin();
-        $sessionId = (int)($_GET["sessionid"] ?? 0);
-        $session = $this->yummyService->getSessionById($sessionId);
+        $id = (int)($_GET["sessionid"] ?? 0);
+        $session = $this->yummyService->getSessionById($id);
+        $restaurants = $this->yummyService->getRestaurants();
         require __DIR__ . '/../views/cms/food/editsession.php';
     }
 
-    /**
-     * [CMS] Handles saving (add/update) a session.
-     */
     public function saveSession()
     {
         $this->requireLogin();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /yummy/manageSessions'); exit;
+            header('Location: /yummy/manageSessions');
+            exit;
         }
 
         $session = new Session();
         $session->setId((int)$this->getPost('id'));
         $session->setRestaurantid((int)$this->getPost('restaurantid'));
-        // ... set all other properties ...
+        $session->setPrice((float)$this->getPost('price'));
+        $session->setReducedprice((float)$this->getPost('reducedprice'));
+        $session->setStarttime($this->getPost('starttime'));
+        $session->setSession_length((float)$this->getPost('length'));
+        $session->setAvailable_seats((int)$this->getPost('seats'));
 
         if ($this->yummyService->saveSession($session)) {
             $_SESSION['success_message'] = 'Session saved successfully.';
         } else {
             $_SESSION['error_message'] = 'Could not save session.';
         }
-
         header("Location: /yummy/manageSessions");
         exit;
     }
 
-    /**
-     * [CMS] Handles deleting a session.
-     */
     public function deleteSession()
     {
         $this->requireLogin();
-        // The deletion logic from your original code was missing a parameter.
-        // Assuming it takes an ID from POST.
-        $sessionId = (int)($_POST['delete_session_id'] ?? 0);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['delete_session_id'])) {
+            header('Location: /yummy/manageSessions');
+            exit;
+        }
+
+        $sessionId = (int)$this->getPost('delete_session_id');
         if ($sessionId > 0) {
-            $this->yummyService->deleteSession($sessionId);
-            $_SESSION['success_message'] = 'Session deleted.';
+            if ($this->yummyService->deleteSession($sessionId)) {
+                $_SESSION['success_message'] = 'Session deleted.';
+            } else {
+                $_SESSION['error_message'] = 'Could not delete session.';
+            }
         }
         header("Location: /yummy/manageSessions");
         exit;

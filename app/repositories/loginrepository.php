@@ -1,146 +1,125 @@
 <?php
-require __DIR__ . '/repository.php';
-require __DIR__ . '/../models/user.php';
-class LoginRepository extends Repository
+// app/repositories/LoginRepository.php
+
+require_once __DIR__ . '/../models/User.php';
+
+class LoginRepository
 {
-    public function register($username, $password, $email)
+    private \PDO $connection;
+
+    public function __construct()
+    {
+        $configPath = __DIR__ . '/../config/dbconfig.php';
+        if (!file_exists($configPath)) { throw new \RuntimeException("Missing config file"); }
+        require $configPath;
+
+        $dsn = sprintf('%s:host=%s;dbname=%s;charset=utf8mb4', $type, $servername, $database);
+        try {
+            $this->connection = new \PDO($dsn, $username, $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
+        } catch (\PDOException $e) {
+            error_log("DB connection failed: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getByUsername(string $username): ?User
     {
         try {
-            // Insert new user
-            $query = 'INSERT INTO user (username, password, roleId, email, created_at) VALUES (:username, :password, :roleId, :email, NOW())';
-            $stmt = $this->connection->prepare($query);
+            $stmt = $this->connection->prepare('SELECT * FROM user WHERE username = :username');
             $stmt->bindValue(':username', $username);
-            $stmt->bindValue(':password', $password);
-            $stmt->bindValue(':roleId', 2); //default user is customer
+            $stmt->execute();
+            $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+            $user = $stmt->fetch();
+            return $user ?: null;
+        } catch (PDOException $e) {
+            error_log("getByUsername error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function register(string $username, string $hashedPassword, string $email): bool
+    {
+        try {
+            $stmt = $this->connection->prepare('INSERT INTO user (username, password, roleId, email) VALUES (:username, :password, :roleId, :email)');
+            $stmt->bindValue(':username', $username);
+            $stmt->bindValue(':password', $hashedPassword);
+            $stmt->bindValue(':roleId', 2);
             $stmt->bindValue(':email', $email);
-            if ($stmt->execute()) {
-                return true;
-            }
+            return $stmt->execute();
         } catch (PDOException $e) {
-            print_r($e);
+            error_log("Register error: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
-    public function getByUsername($username)
-    {
-        $stmt = $this->connection->prepare('SELECT * FROM user WHERE username = :username');
-        $stmt->bindValue(':username', $username);
-        $stmt->execute();
-        $row = $stmt->fetch();
+    // ## МЕТОДЫ ДЛЯ СБРОСА ПАРОЛЯ, КОТОРЫЕ МЫ ВОЗВРАЩАЕМ ##
 
-        if (!$row) {
-            return null;
-        }
-
-        $user = new User();
-        $user->setId($row['id']);
-        $user->setUsername($row['username']);
-        $user->setPassword($row['password']);
-        $user->setEmail($row['email']);
-        $user->setRole($row['roleId']);
-        $user->setCreationDate($row['created_at']);
-
-        return $user;
-    }
-    public function getByEmail($email)
-    {
-        $stmt = $this->connection->prepare('SELECT * FROM user WHERE email = :email');
-        $stmt->bindValue(':email', $email);
-        $stmt->execute();
-        $row = $stmt->fetch();
-
-        if (!$row) {
-            return null;
-        }
-
-        $user = new User();
-        $user->setId($row['id']);
-        $user->setUsername($row['username']);
-        $user->setPassword($row['password']);
-        $user->setEmail($row['email']);
-        $user->setRole($row['roleId']);
-        $user->setCreationDate($row['created_at']);
-
-        return $user;
-    }
-
-    public function getById($id)
-    {
-        $stmt = $this->connection->prepare('SELECT * FROM user WHERE id = :id');
-        $stmt->bindValue(':id', $id);
-        $stmt->execute();
-        $row = $stmt->fetch();
-
-        if (!$row) {
-            return null;
-        }
-
-        $user = new User();
-        $user->setId($row['id']);
-        $user->setUsername($row['username']);
-        $user->setPassword($row['password']);
-        $user->setEmail($row['email']);
-        $user->setRole($row['roleId']);
-        $user->setCreationDate($row['created_at']);
-
-        return $user;
-    }
-
-    public function createVerificationCode($code, $userId)
+    public function createVerificationCode(int $code, int $userId): bool
     {
         try {
-            $query = 'INSERT INTO verification_code (code, userId) VALUES (:code, :userId)';
-            $stmt = $this->connection->prepare($query);
-            $stmt->bindValue(':code', $code);
-            $stmt->bindValue(':userId', $userId);
-            if ($stmt->execute()) {
-                return true;
-            }
+            $stmt = $this->connection->prepare('INSERT INTO verification_code (code, userId) VALUES (:code, :userId)');
+            $stmt->bindValue(':code', $code, \PDO::PARAM_INT);
+            $stmt->bindValue(':userId', $userId, \PDO::PARAM_INT);
+            return $stmt->execute();
         } catch (PDOException $e) {
-            print_r($e);
+            error_log("createVerificationCode error: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
 
-    public function isValid($code)
+    public function isValid(int $code): ?User
     {
         try {
-            $query = 'SELECT userId
-            FROM verification_code
-            WHERE code = :code
-              AND timestamp >= DATE_SUB(NOW(), INTERVAL 10 MINUTE);            
-            ';
-            $stmt = $this->connection->prepare($query);
-            $stmt->bindValue(':code', $code);
+            $stmt = $this->connection->prepare('SELECT userId FROM verification_code WHERE code = :code AND timestamp >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)');
+            $stmt->bindValue(':code', $code, \PDO::PARAM_INT);
             $stmt->execute();
             $row = $stmt->fetch();
+            if (!$row) { return null; }
 
-            if (!$row) {
-                return null;
-            }
-            $userId = $row['userId'];
-            return $this->getById($userId);
+            $userRepo = new LoginRepository(); // Create a new instance to call getById
+            return $userRepo->getById((int)$row['userId']);
         } catch (PDOException $e) {
-            print_r($e);
+            error_log("isValid error: " . $e->getMessage());
+            return null;
         }
     }
 
-    public function updatePassword($userId, $password)
+    public function updatePassword(int $userId, string $hashedPassword): bool
     {
         try {
-            $query = 'UPDATE user
-            SET password = :password
-            WHERE id = :userId';
-            $stmt = $this->connection->prepare($query);
-            $stmt->bindValue(':userId', $userId);
-            $stmt->bindValue(':password', $password);
-            if ($stmt->execute()) {
-                return true;
-            }
+            $stmt = $this->connection->prepare('UPDATE user SET password = :password WHERE id = :userId');
+            $stmt->bindValue(':userId', $userId, \PDO::PARAM_INT);
+            $stmt->bindValue(':password', $hashedPassword);
+            return $stmt->execute();
         } catch (PDOException $e) {
-            print_r($e);
+            error_log("updatePassword error: " . $e->getMessage());
+            return false;
         }
-        return false;
+    }
+
+    public function deleteCode(int $userId): bool
+    {
+        try {
+            $stmt = $this->connection->prepare('DELETE FROM verification_code WHERE userId = :userId');
+            $stmt->bindValue(':userId', $userId, \PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("deleteCode error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getById(int $id): ?User
+    {
+        try {
+            $stmt = $this->connection->prepare('SELECT * FROM user WHERE id = :id');
+            $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+            $stmt->execute();
+            $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+            return $stmt->fetch() ?: null;
+        } catch (PDOException $e) {
+            error_log("getById error: " . $e->getMessage());
+            return null;
+        }
     }
 }

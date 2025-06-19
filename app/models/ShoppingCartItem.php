@@ -1,11 +1,8 @@
 <?php
+// app/models/ShoppingCartItem.php
+
 class ShoppingCartItem implements JsonSerializable
 {
-    public function jsonSerialize(): mixed
-    {
-        return get_object_vars($this);
-    }
-
     private int $id;
     private int $user_id;
     private int $product_id;
@@ -14,143 +11,85 @@ class ShoppingCartItem implements JsonSerializable
     private float $event_price;
     private float $subtotal;
 
-    /**
-     * Get the value of id
-     */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
 
-    /**
-     * Set the value of id
-     *
-     * @return  self
-     */
-    public function setId($id)
+    public function setId(int $id): self
     {
         $this->id = $id;
-
         return $this;
     }
 
-    /**
-     * Get the value of user_id
-     */
-    public function getUser_id()
+    public function getUserId(): int
     {
         return $this->user_id;
     }
 
-    /**
-     * Set the value of user_id
-     *
-     * @return  self
-     */
-    public function setUser_id($user_id)
+    public function setUserId(int $userId): self
     {
-        $this->user_id = $user_id;
-
+        $this->user_id = $userId;
         return $this;
     }
 
-    /**
-     * Get the value of product_id
-     */
-    public function getProduct_id()
+    public function getProductId(): int
     {
         return $this->product_id;
     }
 
-    /**
-     * Set the value of product_id
-     *
-     * @return  self
-     */
-    public function setProduct_id($product_id)
+    public function setProductId(int $productId): self
     {
-        $this->product_id = $product_id;
-
+        $this->product_id = $productId;
         return $this;
     }
 
-    /**
-     * Get the value of qty
-     */
-    public function getQty()
+    public function getQty(): int
     {
         return $this->qty;
     }
 
-    /**
-     * Set the value of qty
-     *
-     * @return  self
-     */
-    public function setQty($qty)
+    public function setQty(int $qty): self
     {
         $this->qty = $qty;
-
         return $this;
     }
 
-    /**
-     * Get the value of event_name
-     */
-    public function getEvent_name()
+    public function getEventName(): string
     {
         return $this->event_name;
     }
 
-    /**
-     * Set the value of event_name
-     *
-     * @return  self
-     */
-    public function setEvent_name($event_name)
+    public function setEventName(string $eventName): self
     {
-        $this->event_name = $event_name;
-
+        $this->event_name = $eventName;
         return $this;
     }
 
-    /**
-     * Get the value of event_price
-     */
-    public function getEvent_price()
+    public function getEventPrice(): float
     {
         return $this->event_price;
     }
 
-    /**
-     * Set the value of event_price
-     *
-     * @return  self
-     */
-    public function setEvent_price($event_price)
+    public function setEventPrice(float $eventPrice): self
     {
-        $this->event_price = $event_price;
-
+        $this->event_price = $eventPrice;
         return $this;
     }
 
-    /**
-     * Get the value of subtotal
-     */
-    public function getSubtotal()
+    public function getSubtotal(): float
     {
         return $this->subtotal;
     }
 
-    /**
-     * Set the value of subtotal
-     *
-     * @return  self
-     */
-    public function setSubtotal($subtotal)
+    public function setSubtotal(float $subtotal): self
     {
         $this->subtotal = $subtotal;
-
         return $this;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return get_object_vars($this);
     }
 }

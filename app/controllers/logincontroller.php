@@ -1,23 +1,23 @@
 <?php
+declare(strict_types=1);
 
-use PHPMailer\Mailer;
+require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../services/LoginService.php';
+require_once __DIR__ . '/../services/EmailService.php';
+require_once __DIR__ . '/../models/User.php';
 
-require __DIR__ . '/../services/loginservice.php';
-require __DIR__ . '/../services/shoppingcartservice.php';
-
-require __DIR__ . '/../utils/mailer.php';
-
-class LoginController
+class LoginController extends BaseController
 {
-    private $loginService;
-    private $shoppingcartService;
-    private $mailer;
+    // Свойства должны быть объявлены здесь
+    private LoginService $loginService;
+    private EmailService $emailService;
 
-    function __construct()
+    public function __construct()
     {
+        parent::__construct();
+        // И инициализированы здесь
         $this->loginService = new LoginService();
-        $this->shoppingcartService = new ShoppingCartService();
-        $this->mailer = new Mailer();
+        $this->emailService = new EmailService();
     }
 
     public function index()
@@ -32,26 +32,19 @@ class LoginController
             exit;
         }
 
-        $username = $this->getPost('username'); // Используем безопасный метод из BaseController
-        $password = $_POST['password'] ?? ''; // Берем пароль как есть
-        $user = $this->loginService->getByUsername($username);
+        $username = $this->getPost('username');
+        $password = trim($_POST['password'] ?? '');
 
-        // Проверяем пользователя и пароль
-        if ($user && password_verify($password, $user->getPassword())) {
-            // Успешный вход
+        $user = $this->loginService->verifyUser($username, $password);
+
+        if ($user) {
             $_SESSION['userId'] = $user->getId();
-            $_SESSION['role'] = $user->getRole();
+            $_SESSION['role'] = $user->getRoleId();
             $_SESSION['userEmail'] = $user->getEmail();
-            $_SESSION['userName'] = $user->getUsername(); // Добавим для удобства
-
-            // Считаем товары в корзине
-            $shoppingCartCount = $this->shoppingCartService->countProducts($user->getId());
-            $_SESSION['cartCount'] = $shoppingCartCount;
-
-            header('Location: /'); // Редирект на главную страницу
+            $_SESSION['userName'] = $user->getUsername();
+            header('Location: /');
             exit;
         } else {
-            // Неуспешный вход
             $_SESSION['error_message'] = 'Login error: Username or password incorrect.';
             header('Location: /login');
             exit;
@@ -66,16 +59,11 @@ class LoginController
         }
 
         $username = $this->getPost('username');
-        $email = $this->getPost('email');
+        $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
         $password = $_POST['password'] ?? '';
 
-        // Валидация
-        if (empty($username) || empty($email) || empty($password)) {
-            $_SESSION['error_message'] = 'All fields are required.';
-            header('Location: /login/register'); exit;
-        }
-        if (strlen($password) < 6) {
-            $_SESSION['error_message'] = 'Password must be at least 6 characters long.';
+        if (empty($username) || empty($password) || !$email) {
+            $_SESSION['error_message'] = 'All fields are required and email must be valid.';
             header('Location: /login/register'); exit;
         }
         if ($this->loginService->getByUsername($username)) {
@@ -87,9 +75,7 @@ class LoginController
             header('Location: /login/register'); exit;
         }
 
-        // Регистрация
-        $hashedPass = password_hash($password, PASSWORD_DEFAULT);
-        if ($this->loginService->register($username, $hashedPass, $email)) {
+        if ($this->loginService->register($username, $password)) {
             $_SESSION['success_message'] = 'Registration successful! Please log in.';
             header('Location: /login');
             exit;
@@ -100,11 +86,6 @@ class LoginController
         }
     }
 
-    public function display()
-    {
-        require __DIR__ . '/../views/login/register.php';
-    }
-
     public function logout()
     {
         session_unset();
@@ -113,76 +94,96 @@ class LoginController
         exit;
     }
 
+    // ## Password Reset Methods ##
+
+    public function resetpassword()
+    {
+        require __DIR__ . '/../views/login/resetpassword.php';
+    }
+
     public function createCode()
     {
-        try {
-            $username = isset($_POST['username']) ? $_POST['username'] : "";
-
-            if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['username'] != null) {
-                session_start();
-
-                $user = $this->loginService->getByUsername($username);
-                $_SESSION['username'] = $user->getUsername();
-                $verificationCode = mt_rand(100000, 999999);
-
-                $receiver = $user->getEmail();
-                $receiver_name = $user->getUsername();
-                $subject = "Verification Code - Haarlem Festival Support";
-                $link = "http://localhost/login/verifyCode?code=" . $verificationCode; //replace localhost with domain name
-                $body_string = 'Click on the link to reset your password: ' . $link;
-                $attachment = "";
-
-                if (!$this->loginService->createVerificationCode($verificationCode, $user->getId()) || !$this->mailer->sendEmail($receiver, $receiver_name,  $subject, $body_string, $attachment, '')) {
-                    echo "<script>alert('Error while sending email'); window.location = '/login/createCode';</script>";
-                } else {
-                    echo "<script>alert('Email sent successfully! You can now close this window'); window.location = '/login/';</script>";
-                }
-            }
-        } catch (Exception $e) {
-            echo $e;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /login/resetpassword');
+            exit;
         }
-        require __DIR__ . '/../views/login/resetpassword.php';
+
+        try {
+            $username = $this->getPost('username');
+            $user = $this->loginService->getByUsername($username);
+
+            if (!$user) {
+                throw new Exception("User with this username was not found.");
+            }
+
+            $verificationCode = mt_rand(100000, 999999);
+            if (!$this->loginService->createVerificationCode($verificationCode, $user->getId())) {
+                throw new Exception("Could not generate a verification code.");
+            }
+
+            // Здесь происходит вызов $this->emailService
+            if ($this->emailService->sendPasswordResetEmail($user, $verificationCode)) {
+                $_SESSION['success_message'] = 'A password reset link has been sent to your email.';
+                header('Location: /login');
+            } else {
+                throw new Exception("Could not send email. Please check server configuration.");
+            }
+            exit;
+
+        } catch (Exception $e) {
+            $_SESSION['error_message'] = "Error: " . $e->getMessage();
+            header('Location: /login/resetpassword');
+            exit;
+        }
     }
 
     public function verifyCode()
     {
-        try {
-            $code = isset($_GET['code']) ? $_GET['code'] : "";
-            $user = $this->loginService->isValid($code);
+        $code = (int)($_GET['code'] ?? 0);
+        $user = $this->loginService->isValid($code);
 
-            if (!$user) {
-                echo "<script>alert('Error validating code'); window.location = '/login';</script>";
-            } else {
-                require __DIR__ . '/../views/login/newpassword.php';
-            }
-        } catch (Exception $e) {
-            echo $e;
+        if (!$user) {
+            $_SESSION['error_message'] = 'The verification code is invalid or has expired.';
+            header('Location: /login');
+            exit;
         }
+
+        $_SESSION['reset_user_id'] = $user->getId();
+        require __DIR__ . '/../views/login/newpassword.php';
     }
 
     public function updatePassword()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $userId = $_POST['userId'];
-            $password1 = $_POST['password'];
-            $password2 = $_POST['confirmPassword'];
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /login');
+            exit;
+        }
 
-            if ($password1 == $password2) {
-                $password = password_hash($password1, PASSWORD_DEFAULT);
-                $this->loginService->updatePassword($userId, $password);
-                $newUser = $this->loginService->getById($userId);
+        $userId = (int)($_SESSION['reset_user_id'] ?? 0);
+        $password = $_POST['password'] ?? '';
+        $confirmPassword = $_POST['confirmPassword'] ?? '';
 
-                if (!$newUser) {
-                    echo "<script>alert('Error updating password'); window.location = '/login/updatePassword';</script>";
-                }
-                if (password_verify($password1, $newUser->getPassword())) {
-                    //send confirmation email
-                    echo "<script>alert('Password updated successfully!'); window.location = '/login';</script>";
-                }
-                //$this->loginService->deleteCode($userId);
-            } else {
-                echo "Passwords do not match!";
-            }
+        if ($userId === 0) {
+            $_SESSION['error_message'] = 'Session expired. Please try again from the beginning.';
+            header('Location: /login/resetpassword');
+            exit;
+        }
+        if (empty($password) || $password !== $confirmPassword) {
+            $_SESSION['error_message'] = 'Passwords do not match. Please try again.';
+            header('Location: /login/resetpassword');
+            exit;
+        }
+
+        if ($this->loginService->updatePassword($userId, $password)) {
+            unset($_SESSION['reset_user_id']);
+            $this->loginService->deleteCode($userId);
+            $_SESSION['success_message'] = 'Password updated successfully! You can now log in with your new password.';
+            header('Location: /login');
+            exit;
+        } else {
+            $_SESSION['error_message'] = 'Could not update password.';
+            header('Location: /login');
+            exit;
         }
     }
 }
