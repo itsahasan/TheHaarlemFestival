@@ -17,7 +17,7 @@
                 </div>
                 <div class="card-body">
                     <?php
-                    // Сообщение об ошибке, если пароли не совпадают
+
                     if (isset($_SESSION['error_message'])) {
                         echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
                         unset($_SESSION['error_message']);
