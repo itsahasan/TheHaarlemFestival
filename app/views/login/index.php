@@ -17,7 +17,6 @@
                 </div>
                 <div class="card-body">
                     <?php
-                    // Блок для отображения сообщений
                     if (isset($_SESSION['error_message'])) {
                         echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
                         unset($_SESSION['error_message']);
@@ -36,9 +35,12 @@
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" name="password" required>
                         </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3 align-items-center">
                             <div class="col"><button type="submit" class="btn btn-primary">Login</button></div>
                             <div class="col"><a class="btn btn-secondary" href="/login/register" role="button">Register</a></div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <a href="/login/resetpassword">Forgot your password?</a>
                         </div>
                     </form>
                 </div>

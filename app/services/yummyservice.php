@@ -73,4 +73,25 @@ class YummyService
             return $this->yummyRepository->createRestaurant($restaurant);
         }
     }
+
+    public function getAllReservations(): array
+    {
+        return $this->yummyRepository->getAllReservations();
+    }
+
+    public function getReservationById(int $id): ?Reservation
+    {
+        return $this->yummyRepository->getReservationById($id);
+    }
+
+    public function updateReservation(Reservation $r): bool
+    {
+        return $this->yummyRepository->updateReservation($r);
+    }
+
+    public function deleteReservationAdmin(int $id): bool {
+        return $this->yummyRepository->deleteReservationAdmin($id);
+    }
+
+
 }

@@ -100,13 +100,17 @@ class YummyController extends BaseController
     public function manageRestaurants()
     {
         $this->requireLogin();
-
         $restaurantToEdit = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit'])) {
             $restaurantToEdit = $this->yummyService->getRestaurantById((int)$_POST['edit'], false);
         }
+        // Получаем массивы из БД
+        $restaurantsAssoc = $this->yummyService->getRestaurants();
+        // Преобразуем каждый массив в объект Restaurant
+        $restaurants = array_map(function(array $r) {
+            return $this->yummyService->getRestaurantById((int)$r['id'], false);
+        }, $restaurantsAssoc);
 
-        $restaurants = $this->yummyService->getRestaurants();
         require __DIR__ . '/../views/cms/food/managerrestaurants.php';
     }
 
@@ -116,7 +120,6 @@ class YummyController extends BaseController
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /yummy/manageRestaurants'); exit;
         }
-
         $isUpdate = !empty($this->getPost('id'));
         $restaurant = new Restaurant();
         $restaurant->setId((int)$this->getPost('id'));
@@ -129,14 +132,11 @@ class YummyController extends BaseController
         $restaurant->setEmail($this->getPost('email'));
         $restaurant->setPhonenumber($this->getPost('phonenumber'));
         $restaurant->setPrice((float)$this->getPost('price'));
-
         $existingRestaurant = $isUpdate ? $this->yummyService->getRestaurantById($restaurant->getId(), false) : null;
-
         for ($i = 1; $i <= 3; $i++) {
             $setMethod = "setImage" . $i;
             $getMethod = "getImage" . $i;
             $fileKey = 'image' . $i;
-
             if (isset($_FILES[$fileKey]) && is_uploaded_file($_FILES[$fileKey]['tmp_name'])) {
                 $imageData = file_get_contents($_FILES[$fileKey]['tmp_name']);
                 if ($isUpdate && $existingRestaurant && $existingRestaurant->$getMethod() > 0) {
@@ -149,7 +149,6 @@ class YummyController extends BaseController
                 $restaurant->$setMethod($existingRestaurant->$getMethod());
             }
         }
-
         if ($this->yummyService->saveRestaurant($restaurant)) {
             $_SESSION['success_message'] = 'Restaurant saved successfully.';
         } else {
@@ -166,7 +165,6 @@ class YummyController extends BaseController
             header('Location: /yummy/manageRestaurants');
             exit;
         }
-
         $idToDelete = (int)$this->getPost('delete_id');
         if ($idToDelete > 0) {
             if ($this->yummyService->deleteRestaurant($idToDelete)) {
@@ -209,7 +207,6 @@ class YummyController extends BaseController
             header('Location: /yummy/manageSessions');
             exit;
         }
-
         $session = new Session();
         $session->setId((int)$this->getPost('id'));
         $session->setRestaurantid((int)$this->getPost('restaurantid'));
@@ -218,7 +215,6 @@ class YummyController extends BaseController
         $session->setStarttime($this->getPost('starttime'));
         $session->setSession_length((float)$this->getPost('length'));
         $session->setAvailable_seats((int)$this->getPost('seats'));
-
         if ($this->yummyService->saveSession($session)) {
             $_SESSION['success_message'] = 'Session saved successfully.';
         } else {
@@ -235,7 +231,6 @@ class YummyController extends BaseController
             header('Location: /yummy/manageSessions');
             exit;
         }
-
         $sessionId = (int)$this->getPost('delete_session_id');
         if ($sessionId > 0) {
             if ($this->yummyService->deleteSession($sessionId)) {
@@ -245,6 +240,113 @@ class YummyController extends BaseController
             }
         }
         header("Location: /yummy/manageSessions");
+        exit;
+    }
+
+
+    public function manageReservations()
+    {
+        $this->requireLogin();
+        // вытаскиваем все резервации
+        $reservations = $this->yummyService->getAllReservations();
+        // передаём в шаблон
+        require __DIR__ . '/../views/cms/food/manageReservations.php';
+    }
+
+
+    public function addReservationAdmin()
+    {
+        $this->requireLogin();
+
+
+        $restaurantId = (int)($_GET['restaurantid'] ?? 0);
+
+        $restaurants = $this->yummyService->getRestaurants();
+        $sessions    = $this->yummyService->getSessionsForRestaurant($restaurantId);
+
+        require __DIR__ . '/../views/cms/food/addreservation.php';
+    }
+
+
+    public function editReservationAdmin()
+    {
+        $this->requireLogin();
+        $id           = (int)($_GET['reservationid'] ?? 0);
+        $reservation  = $this->yummyService->getReservationById($id);
+        if (!$reservation) {
+            $_SESSION['error_message'] = "Reservation #{$id} not found.";
+            header('Location: /yummy/manageReservations');
+            exit;
+        }
+        $restaurants = $this->yummyService->getRestaurants();
+        $sessions    = $this->yummyService->getAllSessions();
+        require __DIR__ . '/../views/cms/food/editreservation.php';
+    }
+
+
+    public function saveReservationAdmin()
+    {
+        $this->requireLogin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /yummy/manageReservations');
+            exit;
+        }
+
+        $isUpdate = !empty($this->getPost('id'));
+        $reservation = new Reservation();
+
+
+        if ($isUpdate) {
+            $reservation->setId((int)$this->getPost('id'));
+        }
+
+
+        $reservation
+            ->setName((string)$this->getPost('name'))
+            ->setRestaurantID((int)$this->getPost('restaurantid'))
+            ->setSessionID((int)$this->getPost('sessionid'))
+            ->setSeats((int)$this->getPost('seats'))
+            ->setDate((string)$this->getPost('date'))
+            ->setRequest((string)$this->getPost('request'))
+            ->setPrice((float)$this->getPost('price'))
+            ->setStatus(isset($_POST['status']) && $this->getPost('status') ? true : false);
+
+
+        if ($isUpdate) {
+            $ok = $this->yummyService->updateReservation($reservation);
+            $_SESSION['success_message'] = $ok
+                ? 'Reservation updated successfully.'
+                : 'Could not update reservation.';
+        } else {
+            $new = $this->yummyService->addReservation($reservation);
+            $_SESSION['success_message'] = $new
+                ? 'Reservation created successfully.'
+                : 'Could not create reservation.';
+        }
+
+        header('Location: /yummy/manageReservations');
+        exit;
+    }
+
+    public function deleteReservationAdmin()
+    {
+        $this->requireLogin();
+
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['delete_reservation_id'])) {
+            header('Location: /yummy/manageReservations');
+            exit;
+        }
+
+        $id = (int) $this->getPost('delete_reservation_id');
+        if ($id > 0) {
+            $ok = $this->yummyService->deleteReservationById($id);
+            $_SESSION['success_message'] = $ok
+                ? "Reservation #{$id} deleted."
+                : "Could not delete reservation #{$id}.";
+        }
+
+        header('Location: /yummy/manageReservations');
         exit;
     }
 }

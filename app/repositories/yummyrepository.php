@@ -130,4 +130,111 @@ class YummyRepository
         $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+    public function getSessionsForRestaurant(int $restaurantId): array
+    {
+        $stmt = $this->connection->prepare("SELECT * FROM food_session WHERE restaurantid = :restaurantid ORDER BY starttime");
+        $stmt->bindValue(':restaurantid', $restaurantId, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, Session::class);
+    }
+
+
+    public function checkSeatsAvailable(int $sessionId, int $seats): bool
+    {
+        $session = $this->getSessionById($sessionId);
+        if ($session) {
+            return $session->getAvailable_seats() >= $seats;
+        }
+        return false;
+    }
+
+    public function addReservation(Reservation $reservation): ?Reservation
+    {
+        $stmt = $this->connection->prepare(
+            "INSERT INTO reservation (name, restaurantID, sessionID, seats, date, request, price, status) 
+             VALUES (:name, :restaurantID, :sessionID, :seats, :date, :request, :price, :status)"
+        );
+        $stmt->bindValue(':name', $reservation->getName());
+        $stmt->bindValue(':restaurantID', $reservation->getRestaurantID(), \PDO::PARAM_INT);
+        $stmt->bindValue(':sessionID', $reservation->getSessionID(), \PDO::PARAM_INT);
+        $stmt->bindValue(':seats', $reservation->getSeats(), \PDO::PARAM_INT);
+        $stmt->bindValue(':date', $reservation->getDate());
+        $stmt->bindValue(':request', $reservation->getRequest());
+        $stmt->bindValue(':price', $reservation->getPrice());
+        $stmt->bindValue(':status', $reservation->getStatus(), \PDO::PARAM_BOOL);
+        if ($stmt->execute()) {
+            $reservation->setId((int)$this->connection->lastInsertId());
+            return $reservation;
+        }
+        return null;
+    }
+
+    public function decreaseSessionSeats(int $sessionId, int $seats): bool
+    {
+        $stmt = $this->connection->prepare("UPDATE food_session SET available_seats = available_seats - :seats WHERE id = :sessionId");
+        $stmt->bindValue(':seats', $seats, \PDO::PARAM_INT);
+        $stmt->bindValue(':sessionId', $sessionId, \PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function getAllReservations(): array
+    {
+        $stmt = $this->connection->query("
+      SELECT r.*, rs.name AS restaurantName, s.starttime AS sessionTime
+        FROM reservation r
+        JOIN restaurant rs ON r.restaurantID = rs.id
+        JOIN food_session s ON r.sessionID = s.id
+        ORDER BY r.id
+    ");
+        return $stmt->fetchAll(PDO::FETCH_CLASS, Reservation::class);
+    }
+
+    public function getReservationById(int $id): ?Reservation
+    {
+        $stmt = $this->connection->prepare("SELECT * FROM reservation WHERE id = :id");
+        $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+        $stmt->execute();
+        $stmt->setFetchMode(\PDO::FETCH_CLASS, Reservation::class);
+        return $stmt->fetch() ?: null;
+    }
+
+
+    public function updateReservation(Reservation $reservation): bool
+    {
+        $stmt = $this->connection->prepare("
+        UPDATE reservation
+           SET name         = :name,
+               restaurantID = :restaurantID,
+               sessionID    = :sessionID,
+               seats        = :seats,
+               date         = :date,
+               request      = :request,
+               price        = :price,
+               status       = :status
+         WHERE id = :id
+    ");
+        $stmt->bindValue(':id',             $reservation->getId(),           PDO::PARAM_INT);
+        $stmt->bindValue(':name',           $reservation->getName());
+        $stmt->bindValue(':restaurantID',   $reservation->getRestaurantID(), PDO::PARAM_INT);
+        $stmt->bindValue(':sessionID',      $reservation->getSessionID(),    PDO::PARAM_INT);
+        $stmt->bindValue(':seats',          $reservation->getSeats(),        PDO::PARAM_INT);
+        $stmt->bindValue(':date',           $reservation->getDate());
+        $stmt->bindValue(':request',        $reservation->getRequest());
+        $stmt->bindValue(':price',          $reservation->getPrice());
+        $stmt->bindValue(':status',         $reservation->getStatus(),       PDO::PARAM_BOOL);
+        return $stmt->execute();
+    }
+
+
+    public function deleteReservationById(int $id): bool
+    {
+        $stmt = $this->connection->prepare("DELETE FROM reservation WHERE id = :id");
+        $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+
+
+
 }

@@ -46,7 +46,7 @@ class EmailService {
                     if (isset($tickets[$ticketCounter])) {
                         $ticket = $tickets[$ticketCounter];
 
-                        // ИЗМЕНЕНО ЗДЕСЬ: Создаем полную ссылку для сканирования
+
                         $scanUrl = BASE_URL . "/qr/scan?uuid=" . $ticket->getUuid();
                         $qrCode = QrCode::create($scanUrl);
 
@@ -69,9 +69,8 @@ class EmailService {
             return false;
         }
     }
-    /**
-     * ИСПРАВЛЕНО: Добавлена полная реализация метода
-     */
+
+
     public function sendPasswordResetEmail(User $user, int $code): bool
     {
         $mail = $this->configureMailer();
